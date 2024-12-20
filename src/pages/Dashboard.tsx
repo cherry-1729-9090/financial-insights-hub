@@ -46,8 +46,8 @@ const Dashboard = () => {
   const { data } = useQuery({
     queryKey: ["creditProfile"],
     queryFn: fetchCreditProfile,
-    onSettled: (_, error) => {
-      if (error) {
+    meta: {
+      onError: (error: Error) => {
         toast("Using fallback data due to connection issues");
         console.error("Query error:", error);
       }
