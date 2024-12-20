@@ -3,13 +3,21 @@ import { Button } from "@/components/ui/button";
 import MetricCard from "@/components/MetricCard";
 import { useQuery } from "@tanstack/react-query";
 import { CircleDollarSign, CreditCard, Building2, Wallet } from "lucide-react";
+import { toast } from "@/components/ui/sonner";
 
 const fetchCreditProfile = async () => {
   try {
-    const response = await fetch("https://app.minemi.ai/api/v1/credit-profile-insights");
+    const response = await fetch("https://app.minemi.ai/api/v1/credit-profile-insights", {
+      mode: 'cors',
+      headers: {
+        'Accept': 'application/json',
+      }
+    });
+    
     if (!response.ok) throw new Error("Failed to fetch");
     return response.json();
   } catch (error) {
+    console.log("Falling back to default data due to:", error);
     // Return fallback data if API fails
     return {
       data: {
@@ -38,6 +46,10 @@ const Dashboard = () => {
   const { data } = useQuery({
     queryKey: ["creditProfile"],
     queryFn: fetchCreditProfile,
+    onError: (error) => {
+      toast("Using fallback data due to connection issues");
+      console.error("Query error:", error);
+    }
   });
 
   const profileData = data?.data || {};
