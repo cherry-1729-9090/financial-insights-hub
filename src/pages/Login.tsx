@@ -52,9 +52,6 @@ const Login = () => {
           }}
           theme="light"
           providers={[]}
-          onAuthError={(error) => {
-            toast.error(error.message);
-          }}
         />
       </div>
     </div>
