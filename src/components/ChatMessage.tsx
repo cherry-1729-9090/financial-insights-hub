@@ -8,18 +8,18 @@ interface ChatMessageProps {
 const ChatMessage = ({ message, isAi = false }: ChatMessageProps) => {
   return (
     <div
-      className={`flex gap-3 p-4 rounded-lg mb-4 ${
-        isAi ? "bg-gray-50" : "bg-primary/5"
+      className={`flex gap-2 p-3 rounded-lg mb-2 max-w-[85%] ${
+        isAi ? "bg-gray-50 ml-0" : "bg-primary/5 ml-auto"
       }`}
     >
       <div className={`shrink-0 ${isAi ? "text-primary" : "text-secondary"}`}>
         {isAi ? (
-          <Bot className="h-6 w-6" />
+          <Bot className="h-5 w-5" />
         ) : (
-          <MessageCircle className="h-6 w-6" />
+          <MessageCircle className="h-5 w-5" />
         )}
       </div>
-      <div className="flex-1 space-y-2">
+      <div className="space-y-1">
         <p className="text-sm font-medium">
           {isAi ? "AI Financial Advisor" : "You"}
         </p>

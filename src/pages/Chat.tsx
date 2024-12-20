@@ -6,6 +6,7 @@ import ChatSidebar from "@/components/ChatSidebar";
 import { ArrowLeft, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
 
 const EXAMPLE_QUESTIONS = [
   "What's the best credit card for my credit score?",
@@ -34,25 +35,23 @@ const Chat = () => {
     setInputMessage("");
     setIsLoading(true);
 
-    // Get the API key from environment
-    const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
-    
-    if (!apiKey) {
-      toast.error("OpenRouter API key is not set. Please add it in the project settings.");
-      setMessages(prev => [...prev, { 
-        text: "I apologize, but I need an API key to function. Please add your OpenRouter API key in the project settings.", 
-        isAi: true 
-      }]);
-      setIsLoading(false);
-      return;
-    }
-
     try {
+      const { data: { OPENROUTER_API_KEY } } = await supabase
+        .from('secrets')
+        .select('OPENROUTER_API_KEY')
+        .single();
+
+      if (!OPENROUTER_API_KEY) {
+        toast.error("OpenRouter API key is not set. Please add it in the project settings.");
+        setIsLoading(false);
+        return;
+      }
+
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`,
+          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
           "HTTP-Referer": window.location.origin,
           "X-Title": "Financial Advisor Chat"
         },
@@ -61,7 +60,7 @@ const Chat = () => {
           messages: [
             {
               role: "system",
-              content: "You are a helpful financial advisor. Provide clear, concise advice based on best financial practices."
+              content: "You are a helpful financial advisor. Provide clear, concise advice based on best financial practices. Keep responses under 150 words."
             },
             {
               role: "user",
@@ -72,8 +71,7 @@ const Chat = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error?.message || "Failed to get response");
+        throw new Error("Failed to get response");
       }
 
       const data = await response.json();
@@ -82,11 +80,7 @@ const Chat = () => {
       setMessages(prev => [...prev, { text: aiResponse, isAi: true }]);
     } catch (error) {
       console.error("Error:", error);
-      toast.error("Failed to get response. Please check your API key and try again.");
-      setMessages(prev => [...prev, { 
-        text: "I apologize, but I'm having trouble connecting right now. Please check your API key and try again.", 
-        isAi: true 
-      }]);
+      toast.error("Failed to get response. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -104,30 +98,30 @@ const Chat = () => {
       />
       
       <div className="flex-1 flex flex-col bg-white">
-        <div className="p-4 border-b flex items-center bg-white/50 backdrop-blur-sm">
+        <div className="p-3 border-b flex items-center bg-white/50 backdrop-blur-sm">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate("/")}
-            className="mr-4"
+            className="mr-3"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-xl font-semibold">AI Financial Advisor</h1>
+          <h1 className="text-lg font-semibold">AI Financial Advisor</h1>
         </div>
 
-        <div className="flex-1 overflow-auto p-4 space-y-4">
+        <div className="flex-1 overflow-auto p-4">
           {messages.map((msg, idx) => (
             <ChatMessage key={idx} message={msg.text} isAi={msg.isAi} />
           ))}
           {isLoading && (
-            <div className="animate-pulse p-4">
+            <div className="animate-pulse p-3">
               <div className="h-4 bg-gray-100 rounded w-3/4"></div>
             </div>
           )}
         </div>
 
-        <div className="p-4 border-t bg-white/50 backdrop-blur-sm space-y-4">
+        <div className="p-3 border-t bg-white/50 backdrop-blur-sm space-y-3">
           <div className="flex gap-2">
             <Input
               value={inputMessage}
@@ -154,7 +148,7 @@ const Chat = () => {
                 key={idx}
                 variant="outline"
                 onClick={() => handleSendMessage(question)}
-                className="text-left justify-start h-auto py-2 px-3"
+                className="text-left justify-start h-auto py-2 px-3 text-sm"
                 disabled={isLoading}
               >
                 {question}
