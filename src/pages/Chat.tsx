@@ -4,6 +4,7 @@ import ChatMessage from "@/components/ChatMessage";
 import ChatSidebar from "@/components/ChatSidebar";
 import ChatHeader from "@/components/ChatHeader";
 import ChatInput from "@/components/ChatInput";
+import SuggestedQuestions from "@/components/SuggestedQuestions";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -25,10 +26,9 @@ const Chat = () => {
   const navigate = useNavigate();
   const [inputMessage, setInputMessage] = useState("");
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
-  const [messages, setMessages] = useState<{ text: string; isAi: boolean }[]>([
-    { text: "Hello! How can I help you with your finances today?", isAi: true }
-  ]);
+  const [messages, setMessages] = useState<{ text: string; isAi: boolean }[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(true);
 
   // Get current user
   useEffect(() => {
@@ -90,6 +90,7 @@ const Chat = () => {
           isAi: msg.role === 'assistant'
         }))
       );
+      setShowSuggestions(false);
     }
   }, [selectedChat, chatMessages]);
 
@@ -98,6 +99,7 @@ const Chat = () => {
     
     setInputMessage("");
     setMessages(prev => [...prev, { text: message, isAi: false }]);
+    setShowSuggestions(false);
 
     try {
       let sessionId = selectedChat;
@@ -167,7 +169,8 @@ const Chat = () => {
 
   const handleNewChat = () => {
     setSelectedChat(null);
-    setMessages([{ text: "How can I help you with your finances today?", isAi: true }]);
+    setMessages([]);
+    setShowSuggestions(true);
   };
 
   return (
@@ -183,9 +186,13 @@ const Chat = () => {
         <ChatHeader />
 
         <div className="flex-1 overflow-auto p-4">
-          {messages.map((msg, idx) => (
-            <ChatMessage key={idx} message={msg.text} isAi={msg.isAi} />
-          ))}
+          {showSuggestions && messages.length === 0 ? (
+            <SuggestedQuestions onSelectQuestion={handleSendMessage} />
+          ) : (
+            messages.map((msg, idx) => (
+              <ChatMessage key={idx} message={msg.text} isAi={msg.isAi} />
+            ))
+          )}
         </div>
 
         <ChatInput 
