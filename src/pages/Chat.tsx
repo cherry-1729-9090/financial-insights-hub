@@ -5,6 +5,7 @@ import ChatMessage from "@/components/ChatMessage";
 import ChatSidebar from "@/components/ChatSidebar";
 import { ArrowLeft, Send } from "lucide-react";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 
 const EXAMPLE_QUESTIONS = [
   "What's the best credit card for my credit score?",
@@ -21,9 +22,9 @@ const Chat = () => {
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [chatHistory] = useState([
-    { id: "1", title: "Credit Card Advice" },
-    { id: "2", title: "Loan Management" },
-    { id: "3", title: "Credit Score Tips" }
+    { id: "1", title: "Credit Card Advice", created_at: new Date().toISOString() },
+    { id: "2", title: "Loan Management", created_at: new Date().toISOString() },
+    { id: "3", title: "Credit Score Tips", created_at: new Date().toISOString() }
   ]);
 
   const handleSendMessage = async (question: string) => {
@@ -92,44 +93,47 @@ const Chat = () => {
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-gray-50/50">
       <ChatSidebar 
         history={chatHistory}
         onSelectChat={(id) => console.log("Selected chat:", id)}
+        onNewChat={() => {
+          setMessages([{ text: "How can I help you with your finances today?", isAi: true }]);
+          setInputMessage("");
+        }}
       />
       
-      <div className="flex-1 flex flex-col">
-        <div className="p-4 border-b flex items-center">
+      <div className="flex-1 flex flex-col bg-white">
+        <div className="p-4 border-b flex items-center bg-white/50 backdrop-blur-sm">
           <Button
             variant="ghost"
+            size="icon"
             onClick={() => navigate("/")}
             className="mr-4"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
+            <ArrowLeft className="h-4 w-4" />
           </Button>
           <h1 className="text-xl font-semibold">AI Financial Advisor</h1>
         </div>
 
-        <div className="flex-1 overflow-auto p-4">
+        <div className="flex-1 overflow-auto p-4 space-y-4">
           {messages.map((msg, idx) => (
             <ChatMessage key={idx} message={msg.text} isAi={msg.isAi} />
           ))}
           {isLoading && (
             <div className="animate-pulse p-4">
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-4 bg-gray-100 rounded w-3/4"></div>
             </div>
           )}
         </div>
 
-        <div className="p-4 border-t">
-          <div className="flex gap-2 mb-4">
-            <input
-              type="text"
+        <div className="p-4 border-t bg-white/50 backdrop-blur-sm space-y-4">
+          <div className="flex gap-2">
+            <Input
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Type your financial question..."
-              className="flex-1 p-2 border rounded-lg"
+              className="flex-1"
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
                   handleSendMessage(inputMessage);
@@ -144,13 +148,13 @@ const Chat = () => {
             </Button>
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-2">
             {EXAMPLE_QUESTIONS.map((question, idx) => (
               <Button
                 key={idx}
                 variant="outline"
                 onClick={() => handleSendMessage(question)}
-                className="text-left justify-start"
+                className="text-left justify-start h-auto py-2 px-3"
                 disabled={isLoading}
               >
                 {question}
