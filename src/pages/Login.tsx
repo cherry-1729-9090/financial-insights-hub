@@ -18,7 +18,7 @@ const Login = () => {
     checkUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (event) => {
         if (event === "SIGNED_IN") {
           toast.success("Successfully signed in!");
           navigate("/");
@@ -28,10 +28,6 @@ const Login = () => {
         }
         if (event === "USER_UPDATED") {
           toast.success("Profile updated!");
-        }
-        // Handle authentication errors
-        if (event === "USER_DELETED") {
-          toast.error("Account deleted");
         }
       }
     );
@@ -56,7 +52,7 @@ const Login = () => {
           }}
           theme="light"
           providers={[]}
-          onError={(error) => {
+          onAuthError={(error) => {
             toast.error(error.message);
           }}
         />
