@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import ChatMessage from "@/components/ChatMessage";
@@ -7,60 +7,145 @@ import { ArrowLeft, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
-const EXAMPLE_QUESTIONS = [
-  "What's the best credit card for my credit score?",
-  "How can I improve my credit score?",
-  "Should I consolidate my loans?",
-  "What's the ideal debt-to-income ratio?"
-];
+interface ChatSession {
+  id: string;
+  title: string;
+  created_at: string;
+}
+
+interface ChatMessage {
+  id: string;
+  content: string;
+  role: string;
+  created_at: string;
+}
 
 const Chat = () => {
   const navigate = useNavigate();
-  const [messages, setMessages] = useState<{ text: string; isAi: boolean }[]>([
-    { text: "Hello! Choose a question below or ask your own financial question.", isAi: true }
-  ]);
   const [inputMessage, setInputMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [chatHistory] = useState([
-    { id: "1", title: "Credit Card Advice", created_at: new Date().toISOString() },
-    { id: "2", title: "Loan Management", created_at: new Date().toISOString() },
-    { id: "3", title: "Credit Score Tips", created_at: new Date().toISOString() }
+  const [selectedChat, setSelectedChat] = useState<string | null>(null);
+  const [messages, setMessages] = useState<{ text: string; isAi: boolean }[]>([
+    { text: "Hello! How can I help you with your finances today?", isAi: true }
   ]);
 
-  const handleSendMessage = async (question: string) => {
-    if (!question.trim()) return;
+  // Fetch chat history
+  const { data: chatHistory = [] } = useQuery({
+    queryKey: ['chatHistory'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('chat_sessions')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as ChatSession[];
+    }
+  });
+
+  // Fetch messages for selected chat
+  const { data: chatMessages = [] } = useQuery({
+    queryKey: ['chatMessages', selectedChat],
+    queryFn: async () => {
+      if (!selectedChat) return [];
+      
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('session_id', selectedChat)
+        .order('created_at', { ascending: true });
+      
+      if (error) throw error;
+      return data as ChatMessage[];
+    },
+    enabled: !!selectedChat
+  });
+
+  // Update messages when chat is selected
+  useEffect(() => {
+    if (selectedChat && chatMessages.length > 0) {
+      setMessages(
+        chatMessages.map(msg => ({
+          text: msg.content,
+          isAi: msg.role === 'assistant'
+        }))
+      );
+    }
+  }, [selectedChat, chatMessages]);
+
+  const handleSendMessage = async (message: string) => {
+    if (!message.trim()) return;
     
-    setMessages(prev => [...prev, { text: question, isAi: false }]);
     setInputMessage("");
-    setIsLoading(true);
+    setMessages(prev => [...prev, { text: message, isAi: false }]);
 
     try {
+      let sessionId = selectedChat;
+      
+      // Create new chat session if none selected
+      if (!sessionId) {
+        const { data: session, error: sessionError } = await supabase
+          .from('chat_sessions')
+          .insert([{ 
+            title: message.slice(0, 50) + (message.length > 50 ? '...' : ''),
+          }])
+          .select()
+          .single();
+        
+        if (sessionError) throw sessionError;
+        sessionId = session.id;
+        setSelectedChat(sessionId);
+      }
+
+      // Save user message
+      const { error: messageError } = await supabase
+        .from('chat_messages')
+        .insert([{
+          session_id: sessionId,
+          content: message,
+          role: 'user'
+        }]);
+
+      if (messageError) throw messageError;
+
+      // Get AI response
       const { data, error } = await supabase.functions.invoke('chat', {
-        body: { prompt: question }
+        body: { prompt: message }
       });
 
       if (error) throw error;
 
       const aiResponse = data?.generatedText || "I apologize, but I couldn't process your request at this time.";
+      
+      // Save AI response
+      await supabase
+        .from('chat_messages')
+        .insert([{
+          session_id: sessionId,
+          content: aiResponse,
+          role: 'assistant'
+        }]);
+
       setMessages(prev => [...prev, { text: aiResponse, isAi: true }]);
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to get response. Please try again.");
-    } finally {
-      setIsLoading(false);
     }
+  };
+
+  const handleNewChat = () => {
+    setSelectedChat(null);
+    setMessages([{ text: "How can I help you with your finances today?", isAi: true }]);
   };
 
   return (
     <div className="flex h-screen bg-gray-50/50">
       <ChatSidebar 
         history={chatHistory}
-        onSelectChat={(id) => console.log("Selected chat:", id)}
-        onNewChat={() => {
-          setMessages([{ text: "How can I help you with your finances today?", isAi: true }]);
-          setInputMessage("");
-        }}
+        onSelectChat={setSelectedChat}
+        selectedChat={selectedChat}
+        onNewChat={handleNewChat}
       />
       
       <div className="flex-1 flex flex-col bg-white">
@@ -80,14 +165,9 @@ const Chat = () => {
           {messages.map((msg, idx) => (
             <ChatMessage key={idx} message={msg.text} isAi={msg.isAi} />
           ))}
-          {isLoading && (
-            <div className="animate-pulse p-3">
-              <div className="h-4 bg-gray-100 rounded w-3/4"></div>
-            </div>
-          )}
         </div>
 
-        <div className="p-3 border-t bg-white/50 backdrop-blur-sm space-y-3">
+        <div className="p-3 border-t bg-white/50 backdrop-blur-sm">
           <div className="flex gap-2">
             <Input
               value={inputMessage}
@@ -102,24 +182,10 @@ const Chat = () => {
             />
             <Button 
               onClick={() => handleSendMessage(inputMessage)}
-              disabled={isLoading || !inputMessage.trim()}
+              disabled={!inputMessage.trim()}
             >
               <Send className="h-4 w-4" />
             </Button>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-2">
-            {EXAMPLE_QUESTIONS.map((question, idx) => (
-              <Button
-                key={idx}
-                variant="outline"
-                onClick={() => handleSendMessage(question)}
-                className="text-left justify-start h-auto py-2 px-3 text-sm"
-                disabled={isLoading}
-              >
-                {question}
-              </Button>
-            ))}
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { MessageSquare, Plus, ChevronLeft } from "lucide-react";
+import { MessageSquare, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -12,7 +12,7 @@ interface ChatHistory {
 interface ChatSidebarProps {
   history: ChatHistory[];
   onSelectChat: (id: string) => void;
-  selectedChat?: string;
+  selectedChat?: string | null;
   onNewChat?: () => void;
   className?: string;
 }
