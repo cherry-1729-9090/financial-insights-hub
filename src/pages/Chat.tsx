@@ -38,7 +38,7 @@ const Chat = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer $OPENROUTER_API_KEY",
+          "Authorization": `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY || "$OPENROUTER_API_KEY"}`,
           "HTTP-Referer": window.location.origin,
           "X-Title": "Financial Advisor Chat"
         },
@@ -58,7 +58,8 @@ const Chat = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to get response");
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || "Failed to get response");
       }
 
       const data = await response.json();
@@ -67,9 +68,9 @@ const Chat = () => {
       setMessages(prev => [...prev, { text: aiResponse, isAi: true }]);
     } catch (error) {
       console.error("Error:", error);
-      toast.error("Failed to get response. Please try again.");
+      toast.error("Failed to get response. Please check your API key and try again.");
       setMessages(prev => [...prev, { 
-        text: "I apologize, but I'm having trouble connecting right now. Please try again.", 
+        text: "I apologize, but I'm having trouble connecting right now. Please check your API key and try again.", 
         isAi: true 
       }]);
     } finally {
