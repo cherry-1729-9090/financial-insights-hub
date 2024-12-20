@@ -29,37 +29,57 @@ const Chat = () => {
   const [messages, setMessages] = useState<{ text: string; isAi: boolean }[]>([
     { text: "Hello! How can I help you with your finances today?", isAi: true }
   ]);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Get current user
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Please login to continue");
+        navigate("/");
+        return;
+      }
+      setUserId(user.id);
+    };
+    getUser();
+  }, [navigate]);
 
   // Fetch chat history
   const { data: chatHistory = [] } = useQuery({
     queryKey: ['chatHistory'],
     queryFn: async () => {
+      if (!userId) return [];
+      
       const { data, error } = await supabase
         .from('chat_sessions')
         .select('*')
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
       return data as ChatSession[];
-    }
+    },
+    enabled: !!userId
   });
 
   // Fetch messages for selected chat
   const { data: chatMessages = [] } = useQuery({
     queryKey: ['chatMessages', selectedChat],
     queryFn: async () => {
-      if (!selectedChat) return [];
+      if (!selectedChat || !userId) return [];
       
       const { data, error } = await supabase
         .from('chat_messages')
         .select('*')
         .eq('session_id', selectedChat)
+        .eq('user_id', userId)
         .order('created_at', { ascending: true });
       
       if (error) throw error;
       return data as ChatMessage[];
     },
-    enabled: !!selectedChat
+    enabled: !!selectedChat && !!userId
   });
 
   // Update messages when chat is selected
@@ -75,7 +95,7 @@ const Chat = () => {
   }, [selectedChat, chatMessages]);
 
   const handleSendMessage = async (message: string) => {
-    if (!message.trim()) return;
+    if (!message.trim() || !userId) return;
     
     setInputMessage("");
     setMessages(prev => [...prev, { text: message, isAi: false }]);
@@ -89,6 +109,7 @@ const Chat = () => {
           .from('chat_sessions')
           .insert([{ 
             title: message.slice(0, 50) + (message.length > 50 ? '...' : ''),
+            user_id: userId
           }])
           .select()
           .single();
@@ -104,7 +125,8 @@ const Chat = () => {
         .insert([{
           session_id: sessionId,
           content: message,
-          role: 'user'
+          role: 'user',
+          user_id: userId
         }]);
 
       if (messageError) throw messageError;
@@ -124,7 +146,8 @@ const Chat = () => {
         .insert([{
           session_id: sessionId,
           content: aiResponse,
-          role: 'assistant'
+          role: 'assistant',
+          user_id: userId
         }]);
 
       setMessages(prev => [...prev, { text: aiResponse, isAi: true }]);
