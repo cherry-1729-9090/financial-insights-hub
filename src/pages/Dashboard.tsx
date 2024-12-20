@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import MetricCard from "@/components/MetricCard";
 import { useQuery } from "@tanstack/react-query";
 import { CircleDollarSign, CreditCard, Building2, Wallet } from "lucide-react";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 const fetchCreditProfile = async () => {
   try {
@@ -46,9 +46,11 @@ const Dashboard = () => {
   const { data } = useQuery({
     queryKey: ["creditProfile"],
     queryFn: fetchCreditProfile,
-    onError: (error) => {
-      toast("Using fallback data due to connection issues");
-      console.error("Query error:", error);
+    onSettled: (_, error) => {
+      if (error) {
+        toast("Using fallback data due to connection issues");
+        console.error("Query error:", error);
+      }
     }
   });
 
