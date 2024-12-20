@@ -3,6 +3,7 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -19,7 +20,18 @@ const Login = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === "SIGNED_IN") {
+          toast.success("Successfully signed in!");
           navigate("/");
+        }
+        if (event === "SIGNED_OUT") {
+          toast.info("Signed out");
+        }
+        if (event === "USER_UPDATED") {
+          toast.success("Profile updated!");
+        }
+        // Handle authentication errors
+        if (event === "USER_DELETED") {
+          toast.error("Account deleted");
         }
       }
     );
@@ -35,9 +47,18 @@ const Login = () => {
         </h1>
         <Auth
           supabaseClient={supabase}
-          appearance={{ theme: ThemeSupa }}
+          appearance={{ 
+            theme: ThemeSupa,
+            style: {
+              button: { background: 'rgb(var(--primary))', color: 'white' },
+              anchor: { color: 'rgb(var(--primary))' },
+            },
+          }}
           theme="light"
           providers={[]}
+          onError={(error) => {
+            toast.error(error.message);
+          }}
         />
       </div>
     </div>
