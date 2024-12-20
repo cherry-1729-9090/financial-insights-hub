@@ -10,7 +10,11 @@ const Login = () => {
 
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) {
+        toast.error("Error checking authentication status");
+        return;
+      }
       if (user) {
         navigate("/");
       }
@@ -18,10 +22,12 @@ const Login = () => {
     checkUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event) => {
+      async (event, session) => {
         if (event === "SIGNED_IN") {
-          toast.success("Successfully signed in!");
-          navigate("/");
+          if (session?.user) {
+            toast.success("Successfully signed in!");
+            navigate("/");
+          }
         }
         if (event === "SIGNED_OUT") {
           toast.info("Signed out");
@@ -48,6 +54,7 @@ const Login = () => {
             style: {
               button: { background: 'rgb(var(--primary))', color: 'white' },
               anchor: { color: 'rgb(var(--primary))' },
+              message: { color: 'rgb(var(--destructive))' },
             },
           }}
           theme="light"
