@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import ChatMessage from "@/components/ChatMessage";
 import ChatSidebar from "@/components/ChatSidebar";
-import { ArrowLeft, Send } from "lucide-react";
+import ChatHeader from "@/components/ChatHeader";
+import ChatInput from "@/components/ChatInput";
 import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
@@ -34,10 +33,10 @@ const Chat = () => {
   // Get current user
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error } = await supabase.auth.getUser();
       if (!user) {
         toast.error("Please login to continue");
-        navigate("/");
+        navigate("/login");
         return;
       }
       setUserId(user.id);
@@ -114,7 +113,10 @@ const Chat = () => {
           .select()
           .single();
         
-        if (sessionError) throw sessionError;
+        if (sessionError) {
+          toast.error("Failed to create chat session");
+          throw sessionError;
+        }
         sessionId = session.id;
         setSelectedChat(sessionId);
       }
@@ -129,14 +131,20 @@ const Chat = () => {
           user_id: userId
         }]);
 
-      if (messageError) throw messageError;
+      if (messageError) {
+        toast.error("Failed to save message");
+        throw messageError;
+      }
 
       // Get AI response
       const { data, error } = await supabase.functions.invoke('chat', {
         body: { prompt: message }
       });
 
-      if (error) throw error;
+      if (error) {
+        toast.error("Failed to get AI response. Please try again.");
+        throw error;
+      }
 
       const aiResponse = data?.generatedText || "I apologize, but I couldn't process your request at this time.";
       
@@ -153,7 +161,7 @@ const Chat = () => {
       setMessages(prev => [...prev, { text: aiResponse, isAi: true }]);
     } catch (error) {
       console.error("Error:", error);
-      toast.error("Failed to get response. Please try again.");
+      toast.error("An error occurred. Please try again.");
     }
   };
 
@@ -172,17 +180,7 @@ const Chat = () => {
       />
       
       <div className="flex-1 flex flex-col bg-white">
-        <div className="p-3 border-b flex items-center bg-white/50 backdrop-blur-sm">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/")}
-            className="mr-3"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-lg font-semibold">AI Financial Advisor</h1>
-        </div>
+        <ChatHeader />
 
         <div className="flex-1 overflow-auto p-4">
           {messages.map((msg, idx) => (
@@ -190,27 +188,11 @@ const Chat = () => {
           ))}
         </div>
 
-        <div className="p-3 border-t bg-white/50 backdrop-blur-sm">
-          <div className="flex gap-2">
-            <Input
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Type your financial question..."
-              className="flex-1"
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  handleSendMessage(inputMessage);
-                }
-              }}
-            />
-            <Button 
-              onClick={() => handleSendMessage(inputMessage)}
-              disabled={!inputMessage.trim()}
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+        <ChatInput 
+          inputMessage={inputMessage}
+          setInputMessage={setInputMessage}
+          handleSendMessage={handleSendMessage}
+        />
       </div>
     </div>
   );
