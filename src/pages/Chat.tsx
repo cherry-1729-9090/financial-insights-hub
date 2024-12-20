@@ -33,12 +33,25 @@ const Chat = () => {
     setInputMessage("");
     setIsLoading(true);
 
+    // Get the API key from environment
+    const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+    
+    if (!apiKey) {
+      toast.error("OpenRouter API key is not set. Please add it in the project settings.");
+      setMessages(prev => [...prev, { 
+        text: "I apologize, but I need an API key to function. Please add your OpenRouter API key in the project settings.", 
+        isAi: true 
+      }]);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY || "$OPENROUTER_API_KEY"}`,
+          "Authorization": `Bearer ${apiKey}`,
           "HTTP-Referer": window.location.origin,
           "X-Title": "Financial Advisor Chat"
         },
