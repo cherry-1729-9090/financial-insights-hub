@@ -9,24 +9,31 @@ const corsHeaders = {
 };
 
 function containsCreditCardQuery(text: string): boolean {
+  console.log('Checking if query is about credit cards:', text);
   const creditCardKeywords = [
     'credit card', 'credit cards', 'card recommendation', 'card suggestions',
     'which card', 'best card', 'recommend a card'
   ];
-  return creditCardKeywords.some(keyword => 
+  const isCardQuery = creditCardKeywords.some(keyword => 
     text.toLowerCase().includes(keyword.toLowerCase())
   );
+  console.log('Is credit card query:', isCardQuery);
+  return isCardQuery;
 }
 
 serve(async (req) => {
+  console.log('Received chat request');
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { prompt } = await req.json();
+    console.log('Processing prompt:', prompt);
 
     if (!openRouterApiKey) {
+      console.error('OpenRouter API key is not configured');
       throw new Error('OpenRouter API key is not configured');
     }
 
@@ -47,10 +54,12 @@ serve(async (req) => {
         }
       );
 
+      console.log('Received response from credit recommendations');
       const data = await response.json();
-      generatedText = data.recommendation;
+      console.log('Credit recommendations response:', data);
+      generatedText = data?.recommendation || "I apologize, but I couldn't process your request at this time.";
     } else {
-      // Use regular chat for non-credit card queries
+      console.log('Using regular chat for non-credit card query');
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -74,15 +83,18 @@ serve(async (req) => {
         })
       });
 
+      console.log('Received response from OpenRouter');
       const data = await response.json();
+      console.log('OpenRouter response:', data);
       generatedText = data.choices[0]?.message?.content || "I apologize, but I couldn't process your request at this time.";
     }
 
+    console.log('Final generated text:', generatedText);
     return new Response(JSON.stringify({ generatedText }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in chat function:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -10,35 +10,47 @@ const Login = () => {
 
   useEffect(() => {
     const checkUser = async () => {
+      console.log('Checking authentication status...');
       const { data: { user }, error } = await supabase.auth.getUser();
       if (error) {
+        console.error('Error checking auth status:', error);
         toast.error("Error checking authentication status");
         return;
       }
       if (user) {
+        console.log('User already authenticated:', user.id);
         navigate("/");
+      } else {
+        console.log('No authenticated user found');
       }
     };
     checkUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event);
         if (event === "SIGNED_IN") {
           if (session?.user) {
+            console.log('User signed in successfully:', session.user.id);
             toast.success("Successfully signed in!");
             navigate("/");
           }
         }
         if (event === "SIGNED_OUT") {
+          console.log('User signed out');
           toast.info("Signed out");
         }
         if (event === "USER_UPDATED") {
+          console.log('User profile updated');
           toast.success("Profile updated!");
         }
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log('Cleaning up auth subscription');
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   return (
