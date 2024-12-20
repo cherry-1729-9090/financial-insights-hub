@@ -36,47 +36,13 @@ const Chat = () => {
     setIsLoading(true);
 
     try {
-      const { data: { OPENROUTER_API_KEY } } = await supabase
-        .from('secrets')
-        .select('OPENROUTER_API_KEY')
-        .single();
-
-      if (!OPENROUTER_API_KEY) {
-        toast.error("OpenRouter API key is not set. Please add it in the project settings.");
-        setIsLoading(false);
-        return;
-      }
-
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-          "HTTP-Referer": window.location.origin,
-          "X-Title": "Financial Advisor Chat"
-        },
-        body: JSON.stringify({
-          model: "mistralai/mistral-7b-instruct",
-          messages: [
-            {
-              role: "system",
-              content: "You are a helpful financial advisor. Provide clear, concise advice based on best financial practices. Keep responses under 150 words."
-            },
-            {
-              role: "user",
-              content: question
-            }
-          ]
-        })
+      const { data, error } = await supabase.functions.invoke('chat', {
+        body: { prompt: question }
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to get response");
-      }
+      if (error) throw error;
 
-      const data = await response.json();
-      const aiResponse = data.choices[0]?.message?.content || "I apologize, but I couldn't process your request at this time.";
-      
+      const aiResponse = data?.generatedText || "I apologize, but I couldn't process your request at this time.";
       setMessages(prev => [...prev, { text: aiResponse, isAi: true }]);
     } catch (error) {
       console.error("Error:", error);
