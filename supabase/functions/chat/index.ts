@@ -1,8 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const openRouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -33,6 +31,7 @@ serve(async (req) => {
     const { prompt } = await req.json();
     console.log('Processing prompt:', prompt);
 
+    const openRouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
     if (!openRouterApiKey) {
       console.error('OpenRouter API key is not configured');
       throw new Error('OpenRouter API key is not configured');
@@ -42,13 +41,20 @@ serve(async (req) => {
 
     // Check if the prompt is about credit cards
     if (containsCreditCardQuery(prompt)) {
-      console.log('Credit card query detected, using RAG');
+      console.log('Credit card query detected, using credit recommendations endpoint');
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+      
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Missing Supabase configuration');
+      }
+
       const response = await fetch(
-        `${Deno.env.get('SUPABASE_URL')}/functions/v1/credit-recommendations`,
+        `${supabaseUrl}/functions/v1/credit-recommendations`,
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+            'Authorization': `Bearer ${supabaseAnonKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ query: prompt })
@@ -56,8 +62,9 @@ serve(async (req) => {
       );
       
       if (!response.ok) {
-        console.error('Credit recommendations error:', await response.text());
-        throw new Error('Failed to get credit recommendations');
+        const errorText = await response.text();
+        console.error('Credit recommendations error:', errorText);
+        throw new Error(`Failed to get credit recommendations: ${errorText}`);
       }
       
       const data = await response.json();
@@ -89,8 +96,9 @@ serve(async (req) => {
       });
 
       if (!response.ok) {
-        console.error('OpenRouter error:', await response.text());
-        throw new Error('Failed to get AI response');
+        const errorText = await response.text();
+        console.error('OpenRouter error:', errorText);
+        throw new Error(`Failed to get AI response: ${errorText}`);
       }
 
       console.log('Received response from OpenRouter');
