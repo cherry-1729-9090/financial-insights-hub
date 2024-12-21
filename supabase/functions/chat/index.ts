@@ -7,6 +7,57 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+async function generateEmbedding(text: string) {
+  console.log('Generating embedding for:', text);
+  const togetherApiKey = Deno.env.get('TOGETHER_API_KEY');
+  
+  if (!togetherApiKey) {
+    throw new Error('TOGETHER_API_KEY is not configured');
+  }
+
+  try {
+    const response = await fetch('https://api.together.xyz/v1/embeddings', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${togetherApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'togethercomputer/m2-bert-80M-8k-base',
+        input: text,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to generate embedding: ${await response.text()}`);
+    }
+
+    const data = await response.json();
+    return data.data[0].embedding;
+  } catch (error) {
+    console.error('Error generating embedding:', error);
+    throw error;
+  }
+}
+
+async function performVectorSearch(supabase: any, queryEmbedding: number[], limit = 3) {
+  console.log('Performing vector search');
+  
+  const { data: similarCards, error } = await supabase
+    .from('credit_cards')
+    .select('*')
+    .order(`embedding <-> '[${queryEmbedding.join(',')}]'::vector`)
+    .limit(limit);
+
+  if (error) {
+    console.error('Vector search error:', error);
+    throw error;
+  }
+
+  console.log('Vector search results:', similarCards);
+  return similarCards;
+}
+
 serve(async (req) => {
   console.log('Received chat request');
   
@@ -18,7 +69,7 @@ serve(async (req) => {
     const { prompt } = await req.json();
     console.log('Processing prompt:', prompt);
 
-    // Initialize Supabase client for credit card search
+    // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
@@ -36,22 +87,41 @@ serve(async (req) => {
     let creditCardInfo = '';
     
     if (isCreditCardQuery) {
-      console.log('Credit card query detected, fetching relevant cards...');
+      console.log('Credit card query detected, performing vector search...');
       
-      const { data: cards, error: searchError } = await supabase
-        .from('credit_cards')
-        .select('*')
-        .limit(3);
+      try {
+        // Generate embedding for the query
+        const embedding = await generateEmbedding(prompt);
+        
+        // Perform vector search using existing embedding column
+        const cards = await performVectorSearch(supabase, embedding);
 
-      if (searchError) {
-        console.error('Error searching credit cards:', searchError);
-      } else if (cards && cards.length > 0) {
-        creditCardInfo = '\n\nBased on your query, here are some credit card recommendations:\n\n' +
-          cards.map(card => 
-            `${card.card_name} from ${card.bank_name}:\n` +
-            `- Annual fee: ${card.annual_fee}\n` +
-            `- Features: ${card.features}\n`
-          ).join('\n');
+        if (cards && cards.length > 0) {
+          creditCardInfo = '\n\nBased on semantic search, here are the most relevant credit card recommendations:\n\n' +
+            cards.map(card => 
+              `${card.card_name} from ${card.bank_name}:\n` +
+              `- Annual fee: ${card.annual_fee}\n` +
+              `- Features: ${card.features}\n`
+            ).join('\n');
+        }
+      } catch (error) {
+        console.error('Error in vector search:', error);
+        // Fallback to regular search if vector search fails
+        const { data: cards, error: searchError } = await supabase
+          .from('credit_cards')
+          .select('*')
+          .limit(3);
+
+        if (searchError) {
+          console.error('Error in fallback search:', searchError);
+        } else if (cards && cards.length > 0) {
+          creditCardInfo = '\n\nBased on your query, here are some credit card recommendations:\n\n' +
+            cards.map(card => 
+              `${card.card_name} from ${card.bank_name}:\n` +
+              `- Annual fee: ${card.annual_fee}\n` +
+              `- Features: ${card.features}\n`
+            ).join('\n');
+        }
       }
     }
 
@@ -66,6 +136,7 @@ serve(async (req) => {
       ? "You are a helpful financial advisor specializing in credit cards. Analyze the user's query and the provided credit card recommendations. Provide clear, concise advice and explain which cards might be most suitable and why. Format your responses using markdown for better readability."
       : "You are a helpful financial advisor. Provide clear, concise advice based on best financial practices. Format your responses using markdown for better readability. Use bullet points and headers where appropriate.";
 
+    console.log('Requesting AI response...');
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
