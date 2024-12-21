@@ -40,23 +40,31 @@ async function generateEmbedding(text: string) {
   }
 }
 
-async function performVectorSearch(supabase: any, queryEmbedding: number[], limit = 3) {
-  console.log('Performing vector search');
-  
+async function performVectorSearch(supabase: any, queryEmbedding: number[], queryText: string, limit = 3) {
+  console.log('Performing hybrid search (vector + full-text)');
+
+  const embeddingVector = `[${queryEmbedding.join(',')}]`;
+
   const { data: similarCards, error } = await supabase
     .from('credit_cards')
-    .select('*')
-    .order(`embedding <-> '[${queryEmbedding.join(',')}]'::vector`)
+    .select(`
+      *, 
+      (embedding <-> '${embeddingVector}'::vector) AS similarity,
+      ts_rank_cd(to_tsvector('english', features), plainto_tsquery(${queryText})) AS text_rank
+    `)
+    .order(`similarity`)
+    .order(`text_rank`, { ascending: false })
     .limit(limit);
 
   if (error) {
-    console.error('Vector search error:', error);
+    console.error('Hybrid search error:', error);
     throw error;
   }
 
-  console.log('Vector search results:', similarCards);
+  console.log('Hybrid search results:', similarCards);
   return similarCards;
 }
+
 
 serve(async (req) => {
   console.log('Received chat request');
