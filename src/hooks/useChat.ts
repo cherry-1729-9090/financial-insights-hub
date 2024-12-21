@@ -32,6 +32,40 @@ export const useChat = () => {
     getUser();
   }, [navigate]);
 
+  // Load chat messages when selecting a chat
+  useEffect(() => {
+    const loadChatMessages = async () => {
+      if (!selectedChat) {
+        setMessages([]);
+        return;
+      }
+
+      console.log('Loading messages for chat:', selectedChat);
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('session_id', selectedChat)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error loading chat messages:', error);
+        toast.error("Failed to load chat messages");
+        return;
+      }
+
+      console.log('Chat messages loaded:', data);
+      setMessages(
+        data.map(msg => ({
+          text: msg.content,
+          isAi: msg.role === 'assistant'
+        }))
+      );
+      setShowSuggestions(false);
+    };
+
+    loadChatMessages();
+  }, [selectedChat, setMessages]);
+
   // Handle sending messages
   const handleSendMessage = async (message: string) => {
     if (!message.trim() || !userId) {
