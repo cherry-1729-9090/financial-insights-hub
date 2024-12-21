@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const openRouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
+const openRouterApiKey = process.env.OPENROUTER_API_KEY;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -43,11 +43,11 @@ serve(async (req) => {
     if (containsCreditCardQuery(prompt)) {
       console.log('Credit card query detected, using RAG');
       const response = await fetch(
-        `${Deno.env.get('SUPABASE_URL')}/functions/v1/credit-recommendations`,
+        `${process.env.SUPABASE_URL}/functions/v1/credit-recommendations`,
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+            'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ query: prompt })
@@ -64,7 +64,7 @@ serve(async (req) => {
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${openRouterApiKey}`,
-          "HTTP-Referer": Deno.env.get('SUPABASE_URL') || '',
+          "HTTP-Referer": process.env.SUPABASE_URL || '',
           "X-Title": "Financial Advisor Chat"
         },
         body: JSON.stringify({

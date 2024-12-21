@@ -10,7 +10,7 @@ const corsHeaders = {
 async function generateEmbedding(text: string) {
   console.log('Generating embedding for query:', text);
   try {
-    const together = new Together({ apiKey: Deno.env.get('TOGETHER_API_KEY') });
+    const together = new Together({ apiKey: process.env.TOGETHER_API_KEY });
     console.log('Initialized Together AI client');
     
     const response = await together.embeddings.create({
@@ -34,8 +34,8 @@ async function generateEmbedding(text: string) {
 
 async function findSimilarCreditCards(embedding: number[], limit = 3) {
   console.log('Finding similar credit cards with limit:', limit);
-  const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+  const supabaseUrl = process.env.SUPABASE_URL ?? '';
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   const { data: cards, error } = await supabase.rpc('match_credit_cards', {
@@ -86,8 +86,8 @@ serve(async (req) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${Deno.env.get('OPENROUTER_API_KEY')}`,
-        "HTTP-Referer": Deno.env.get('SUPABASE_URL') || '',
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "HTTP-Referer": process.env.SUPABASE_URL || '',
         "X-Title": "Financial Advisor Chat"
       },
       body: JSON.stringify({
