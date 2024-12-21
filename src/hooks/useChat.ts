@@ -71,11 +71,17 @@ export const useChat = () => {
 
       // Get AI response with streaming
       console.log('Requesting AI response...');
-      const response = await fetch(`${supabase.functions.url}/chat`, {
+      const { data: { session: authSession } } = await supabase.auth.getSession();
+      
+      if (!authSession?.access_token) {
+        throw new Error('No access token available');
+      }
+
+      const response = await fetch(`${process.env.VITE_SUPABASE_URL}/functions/v1/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabase.auth.session()?.access_token}`
+          'Authorization': `Bearer ${authSession.access_token}`
         },
         body: JSON.stringify({ prompt: message })
       });
