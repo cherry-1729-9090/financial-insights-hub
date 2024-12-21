@@ -23,8 +23,8 @@ const mockCreditProfile = {
   gender: "NA"
 };
 
-// Fixed user ID for demo purposes
-const DEMO_USER_ID = "demo-user-123";
+// Fixed user ID for demo purposes - using a valid UUID format
+const DEMO_USER_ID = "123e4567-e89b-12d3-a456-426614174000";
 
 export const useChat = () => {
   const [selectedChat, setSelectedChat] = useState<string | null>(null);

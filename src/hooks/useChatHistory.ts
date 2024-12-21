@@ -9,41 +9,53 @@ export const useChatHistory = (userId: string | null) => {
       console.log('Fetching chat history for user:', userId);
       if (!userId) return [];
       
-      const { data, error } = await supabase
-        .from('chat_sessions')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-      
-      if (error) {
+      try {
+        const { data, error } = await supabase
+          .from('chat_sessions')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error('Error fetching chat history:', error);
+          throw error;
+        }
+        console.log('Chat history fetched:', data);
+        return data;
+      } catch (error) {
         console.error('Error fetching chat history:', error);
-        throw error;
+        toast.error("Failed to fetch chat history");
+        return [];
       }
-      console.log('Chat history fetched:', data);
-      return data;
     },
     enabled: !!userId
   });
 
   const createChatSession = async (message: string) => {
     console.log('Creating new chat session...');
-    const { data: session, error: sessionError } = await supabase
-      .from('chat_sessions')
-      .insert([{ 
-        title: message.slice(0, 50) + (message.length > 50 ? '...' : ''),
-        user_id: userId
-      }])
-      .select()
-      .single();
-    
-    if (sessionError) {
-      console.error('Failed to create chat session:', sessionError);
+    try {
+      const { data: session, error: sessionError } = await supabase
+        .from('chat_sessions')
+        .insert([{ 
+          title: message.slice(0, 50) + (message.length > 50 ? '...' : ''),
+          user_id: userId
+        }])
+        .select()
+        .single();
+      
+      if (sessionError) {
+        console.error('Failed to create chat session:', sessionError);
+        toast.error("Failed to create chat session");
+        throw sessionError;
+      }
+      
+      console.log('New chat session created:', session.id);
+      return session.id;
+    } catch (error) {
+      console.error('Error creating chat session:', error);
       toast.error("Failed to create chat session");
-      throw sessionError;
+      throw error;
     }
-    
-    console.log('New chat session created:', session.id);
-    return session.id;
   };
 
   return {
