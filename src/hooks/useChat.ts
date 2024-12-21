@@ -43,7 +43,7 @@ export const useChat = () => {
 
   // Fetch chat history
   const { data: chatHistory = [] } = useQuery({
-    queryKey: ['chatHistory'],
+    queryKey: ['chatHistory', userId],
     queryFn: async () => {
       console.log('Fetching chat history for user:', userId);
       if (!userId) return [];
@@ -65,28 +65,35 @@ export const useChat = () => {
   });
 
   // Fetch messages for selected chat
-  const { data: chatMessages = [] } = useQuery({
-    queryKey: ['chatMessages', selectedChat],
-    queryFn: async () => {
-      console.log('Fetching messages for chat:', selectedChat);
-      if (!selectedChat || !userId) return [];
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!selectedChat || !userId) return;
       
+      console.log('Fetching messages for chat:', selectedChat);
       const { data, error } = await supabase
         .from('chat_messages')
         .select('*')
         .eq('session_id', selectedChat)
-        .eq('user_id', userId)
         .order('created_at', { ascending: true });
       
       if (error) {
         console.error('Error fetching chat messages:', error);
-        throw error;
+        toast.error("Failed to load chat messages");
+        return;
       }
+
       console.log('Chat messages fetched:', data);
-      return data as ChatMessage[];
-    },
-    enabled: !!selectedChat && !!userId
-  });
+      const formattedMessages = data.map(msg => ({
+        text: msg.content,
+        isAi: msg.role === 'assistant'
+      }));
+      
+      setMessages(formattedMessages);
+      setShowSuggestions(false);
+    };
+
+    fetchMessages();
+  }, [selectedChat, userId]);
 
   // Handle sending messages
   const handleSendMessage = async (message: string) => {
