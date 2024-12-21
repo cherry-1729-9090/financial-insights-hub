@@ -53,8 +53,7 @@ serve(async (req) => {
           body: JSON.stringify({ query: prompt })
         }
       );
-
-      console.log('Received response from credit recommendations');
+      console.log('Credit recommendations response:', response);
       const data = await response.json();
       console.log('Credit recommendations response:', data);
       generatedText = data?.recommendation || "I apologize, but I couldn't process your request at this time.";

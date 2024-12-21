@@ -20,7 +20,7 @@ async function generateEmbedding(text: string) {
     console.log('Received embedding response from Together AI');
 
     if (response.data && response.data[0]?.embedding) {
-      console.log('Successfully generated embedding');
+      console.log('Embedding generated successfully', response.data[0].embedding);
       return response.data[0].embedding;
     } else {
       console.error('Invalid embedding format received:', response);
