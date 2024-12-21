@@ -1,36 +1,67 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useChatMessages } from "./useChatMessages";
 import { useChatHistory } from "./useChatHistory";
 
+// Mock credit profile data
+const mockCreditProfile = {
+  credit_score: "735",
+  total_loan_amt: "13936790",
+  total_hl_amt: "7772878",
+  total_pl_amt: "5462400",
+  all_loan: "66",
+  running_loan: "21",
+  credit_utilization: "NA",
+  lenght_of_credit_history: "NA",
+  default_count: "NA",
+  late_payments: "NA",
+  monthly_income: "NA",
+  yearly_income: "NA",
+  employement_status: "Others",
+  foir: "NA",
+  gender: "NA"
+};
+
+// Fixed user ID for demo purposes
+const DEMO_USER_ID = "demo-user-123";
+
 export const useChat = () => {
-  const navigate = useNavigate();
-  const [userId, setUserId] = useState<string | null>(null);
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
   
   const { messages, setMessages, addMessage } = useChatMessages();
-  const { chatHistory, createChatSession } = useChatHistory(userId);
+  const { chatHistory, createChatSession } = useChatHistory(DEMO_USER_ID);
 
-  // Get current user
+  // Generate initial questions based on credit profile
   useEffect(() => {
-    const getUser = async () => {
-      console.log('Checking user authentication...');
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (!user) {
-        console.log('No authenticated user found, redirecting to login...');
-        toast.error("Please login to continue");
-        navigate("/login");
-        return;
+    const generateInitialQuestions = async () => {
+      if (!showSuggestions) return;
+
+      console.log('Generating initial questions based on credit profile...');
+      try {
+        const { data, error } = await supabase.functions.invoke('chat', {
+          body: { 
+            prompt: `Based on this credit profile: Credit Score: ${mockCreditProfile.credit_score}, Total Loans: ${mockCreditProfile.all_loan}, Running Loans: ${mockCreditProfile.running_loan}, Total Loan Amount: ${mockCreditProfile.total_loan_amt}. Generate 4 relevant financial questions that would be helpful for the user to ask, focusing on credit management and loan optimization. Format the response as a simple array of 4 questions.`
+          }
+        });
+
+        if (error) throw error;
+
+        if (data?.content) {
+          // Parse the response and update suggested questions
+          const questions = JSON.parse(data.content);
+          // The questions will be used by the SuggestedQuestions component
+          console.log('Generated questions:', questions);
+        }
+      } catch (error) {
+        console.error('Error generating questions:', error);
+        toast.error("Failed to generate suggested questions");
       }
-      console.log('User authenticated:', user.id);
-      setUserId(user.id);
     };
-    getUser();
-  }, [navigate]);
+
+    generateInitialQuestions();
+  }, [showSuggestions]);
 
   // Load chat messages when selecting a chat
   useEffect(() => {
@@ -68,8 +99,8 @@ export const useChat = () => {
 
   // Handle sending messages
   const handleSendMessage = async (message: string) => {
-    if (!message.trim() || !userId) {
-      console.log('Invalid message or no user ID');
+    if (!message.trim()) {
+      console.log('Invalid message');
       return;
     }
     
@@ -80,13 +111,11 @@ export const useChat = () => {
     try {
       let sessionId = selectedChat;
       
-      // Create new chat session if none selected
       if (!sessionId) {
         sessionId = await createChatSession(message);
         setSelectedChat(sessionId);
       }
 
-      // Save user message
       console.log('Saving user message to database...');
       const { error: messageError } = await supabase
         .from('chat_messages')
@@ -94,7 +123,7 @@ export const useChat = () => {
           session_id: sessionId,
           content: message,
           role: 'user',
-          user_id: userId
+          user_id: DEMO_USER_ID
         }]);
 
       if (messageError) {
@@ -103,10 +132,11 @@ export const useChat = () => {
         throw messageError;
       }
 
-      // Get AI response
       console.log('Requesting AI response...');
       const { data, error } = await supabase.functions.invoke('chat', {
-        body: { prompt: message }
+        body: { 
+          prompt: `Given this user's credit profile (Credit Score: ${mockCreditProfile.credit_score}, Total Loans: ${mockCreditProfile.all_loan}, Running Loans: ${mockCreditProfile.running_loan}), please provide a detailed response to their question: ${message}`,
+        }
       });
 
       if (error) {
@@ -122,18 +152,15 @@ export const useChat = () => {
       const aiResponse = data.content;
       console.log('AI response received:', aiResponse);
       
-      // Update messages with AI response
       addMessage({ text: aiResponse, isAi: true });
 
-      // Save AI response
-      console.log('Saving AI response to database...');
       await supabase
         .from('chat_messages')
         .insert([{
           session_id: sessionId,
           content: aiResponse,
           role: 'assistant',
-          user_id: userId
+          user_id: DEMO_USER_ID
         }]);
 
       console.log('Message exchange completed successfully');
@@ -143,7 +170,6 @@ export const useChat = () => {
     }
   };
 
-  // Handle new chat
   const handleNewChat = () => {
     console.log('Starting new chat...');
     setSelectedChat(null);

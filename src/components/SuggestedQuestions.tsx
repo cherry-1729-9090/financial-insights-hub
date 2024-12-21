@@ -5,11 +5,12 @@ interface SuggestedQuestionsProps {
 }
 
 const SuggestedQuestions = ({ onSelectQuestion }: SuggestedQuestionsProps) => {
+  // Default questions in case the AI-generated ones aren't ready
   const questions = [
-    "What's my current credit score and how can I improve it?",
-    "Can you analyze my loan history and suggest better options?",
-    "What are the best credit cards available based on my profile?",
-    "How can I better manage my personal loans and debts?"
+    `Given my credit score of 735, what steps can I take to improve it further?`,
+    `I have 21 running loans out of 66 total loans. Is this a healthy ratio?`,
+    `What strategies would you recommend for managing my total loan amount of ₹1.39 crores?`,
+    `How can I optimize my home loan of ₹77.7 lakhs and personal loan of ₹54.6 lakhs?`
   ];
 
   return (
