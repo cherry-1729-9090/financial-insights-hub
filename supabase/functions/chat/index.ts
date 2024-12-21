@@ -27,7 +27,13 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt } = await req.json();
+    const requestData = await req.json();
+    const { prompt } = requestData;
+    
+    if (!prompt) {
+      throw new Error('No prompt provided');
+    }
+    
     console.log('Processing prompt:', prompt);
 
     const openRouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
@@ -35,8 +41,6 @@ serve(async (req) => {
       console.error('OpenRouter API key is not configured');
       throw new Error('OpenRouter API key is not configured');
     }
-
-    let responseStream;
 
     if (containsCreditCardQuery(prompt)) {
       console.log('Credit card query detected, using credit recommendations endpoint');
@@ -68,60 +72,59 @@ serve(async (req) => {
       const data = await response.json();
       console.log('Credit recommendations response:', data);
       
-      // Create a ReadableStream for the credit recommendations response
-      const encoder = new TextEncoder();
-      const stream = new ReadableStream({
-        start(controller) {
-          const recommendation = data?.recommendation || "I apologize, but I couldn't process your request at this time.";
-          controller.enqueue(encoder.encode(JSON.stringify({ content: recommendation }) + '\n'));
-          controller.close();
+      return new Response(
+        JSON.stringify({ content: data?.recommendation || "I apologize, but I couldn't process your request at this time." }),
+        {
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+          },
         }
-      });
-      
-      responseStream = stream;
-    } else {
-      console.log('Using regular chat for non-credit card query');
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${openRouterApiKey}`,
-          "HTTP-Referer": Deno.env.get('SUPABASE_URL') || '',
-          "X-Title": "Financial Advisor Chat"
-        },
-        body: JSON.stringify({
-          model: "mistralai/mistral-7b-instruct",
-          messages: [
-            {
-              role: "system",
-              content: "You are a helpful financial advisor. Provide clear, concise advice based on best financial practices. Format your responses using markdown for better readability. Use bullet points and headers where appropriate."
-            },
-            {
-              role: "user",
-              content: prompt
-            }
-          ],
-          stream: true
-        })
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('OpenRouter error:', errorText);
-        throw new Error(`Failed to get AI response: ${errorText}`);
-      }
-
-      responseStream = response.body;
+      );
     }
 
-    return new Response(responseStream, {
+    console.log('Using regular chat for non-credit card query');
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
       headers: {
-        ...corsHeaders,
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive'
-      }
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${openRouterApiKey}`,
+        "HTTP-Referer": Deno.env.get('SUPABASE_URL') || '',
+        "X-Title": "Financial Advisor Chat"
+      },
+      body: JSON.stringify({
+        model: "mistralai/mistral-7b-instruct",
+        messages: [
+          {
+            role: "system",
+            content: "You are a helpful financial advisor. Provide clear, concise advice based on best financial practices. Format your responses using markdown for better readability. Use bullet points and headers where appropriate."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ]
+      })
     });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('OpenRouter error:', errorText);
+      throw new Error(`Failed to get AI response: ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log('OpenRouter response:', data);
+
+    return new Response(
+      JSON.stringify({ content: data.choices[0].message.content }),
+      {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
   } catch (error) {
     console.error('Error in chat function:', error);

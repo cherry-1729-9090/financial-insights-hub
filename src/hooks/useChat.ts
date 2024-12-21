@@ -69,60 +69,27 @@ export const useChat = () => {
         throw messageError;
       }
 
-      // Get AI response with streaming
+      // Get AI response
       console.log('Requesting AI response...');
-      const response = await supabase.functions.invoke('chat', {
-        body: { prompt: message },
-        headers: {
-          'Content-Type': 'application/json',
-        }
+      const { data, error } = await supabase.functions.invoke('chat', {
+        body: { prompt: message }
       });
 
-      if (!response.data) {
-        throw new Error('No response data received');
+      if (error) {
+        console.error('AI response error:', error);
+        toast.error("Failed to get AI response");
+        throw error;
       }
 
-      let aiResponse = '';
-      const reader = new ReadableStream({
-        start(controller) {
-          try {
-            const data = response.data;
-            if (typeof data === 'object' && data.content) {
-              aiResponse = data.content;
-              controller.enqueue(new TextEncoder().encode(JSON.stringify({ content: data.content })));
-            }
-            controller.close();
-          } catch (error) {
-            controller.error(error);
-          }
-        }
-      }).getReader();
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        const chunk = new TextDecoder().decode(value);
-        try {
-          const data = JSON.parse(chunk);
-          if (data.content) {
-            aiResponse = data.content;
-            // Update UI with streamed response
-            setMessages(prev => {
-              const newMessages = [...prev];
-              const lastMessage = newMessages[newMessages.length - 1];
-              if (lastMessage && lastMessage.isAi) {
-                lastMessage.text = aiResponse;
-                return newMessages;
-              } else {
-                return [...prev, { text: aiResponse, isAi: true }];
-              }
-            });
-          }
-        } catch (e) {
-          console.log('Chunk processing error:', e);
-        }
+      if (!data || !data.content) {
+        throw new Error('Invalid response format from AI');
       }
+
+      const aiResponse = data.content;
+      console.log('AI response received:', aiResponse);
+      
+      // Update messages with AI response
+      addMessage({ text: aiResponse, isAi: true });
 
       // Save AI response
       console.log('Saving AI response to database...');
