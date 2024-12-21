@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const openRouterApiKey = process.env.OPENROUTER_API_KEY;
+const openRouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,6 +24,7 @@ function containsCreditCardQuery(text: string): boolean {
 serve(async (req) => {
   console.log('Received chat request');
   
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -43,17 +44,22 @@ serve(async (req) => {
     if (containsCreditCardQuery(prompt)) {
       console.log('Credit card query detected, using RAG');
       const response = await fetch(
-        `${process.env.SUPABASE_URL}/functions/v1/credit-recommendations`,
+        `${Deno.env.get('SUPABASE_URL')}/functions/v1/credit-recommendations`,
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY}`,
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ query: prompt })
         }
       );
-      console.log('Credit recommendations response:', response);
+      
+      if (!response.ok) {
+        console.error('Credit recommendations error:', await response.text());
+        throw new Error('Failed to get credit recommendations');
+      }
+      
       const data = await response.json();
       console.log('Credit recommendations response:', data);
       generatedText = data?.recommendation || "I apologize, but I couldn't process your request at this time.";
@@ -64,7 +70,7 @@ serve(async (req) => {
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${openRouterApiKey}`,
-          "HTTP-Referer": process.env.SUPABASE_URL || '',
+          "HTTP-Referer": Deno.env.get('SUPABASE_URL') || '',
           "X-Title": "Financial Advisor Chat"
         },
         body: JSON.stringify({
@@ -82,6 +88,11 @@ serve(async (req) => {
         })
       });
 
+      if (!response.ok) {
+        console.error('OpenRouter error:', await response.text());
+        throw new Error('Failed to get AI response');
+      }
+
       console.log('Received response from OpenRouter');
       const data = await response.json();
       console.log('OpenRouter response:', data);
@@ -94,7 +105,11 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error('Error in chat function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack
+      }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
