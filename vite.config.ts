@@ -8,6 +8,18 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    hmr: {
+      overlay: true,
+    },
+    watch: {
+      usePolling: true,
+    },
+    // Enable detailed logging
+    logger: {
+      level: 'info',
+      prefix: '[vite]',
+      timestamp: true,
+    },
   },
   plugins: [
     react(),
@@ -18,5 +30,9 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  // Enable source maps for better debugging
+  build: {
+    sourcemap: true,
   },
 }));
