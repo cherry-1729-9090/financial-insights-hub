@@ -9,6 +9,13 @@ interface ChatInputProps {
 }
 
 const ChatInput = ({ inputMessage, setInputMessage, handleSendMessage }: ChatInputProps) => {
+  const onSendMessage = () => {
+    if (inputMessage.trim()) {
+      handleSendMessage(inputMessage);
+      setInputMessage(''); // Clear the input after sending
+    }
+  };
+
   return (
     <div className="p-3 border-t bg-white/50 backdrop-blur-sm">
       <div className="flex gap-2">
@@ -19,12 +26,12 @@ const ChatInput = ({ inputMessage, setInputMessage, handleSendMessage }: ChatInp
           className="flex-1"
           onKeyPress={(e) => {
             if (e.key === 'Enter') {
-              handleSendMessage(inputMessage);
+              onSendMessage();
             }
           }}
         />
         <Button 
-          onClick={() => handleSendMessage(inputMessage)}
+          onClick={onSendMessage}
           disabled={!inputMessage.trim()}
         >
           <Send className="h-4 w-4" />
