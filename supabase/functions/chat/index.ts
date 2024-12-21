@@ -6,19 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-function containsCreditCardQuery(text: string): boolean {
-  console.log('Checking if query is about credit cards:', text);
-  const creditCardKeywords = [
-    'credit card', 'credit cards', 'card recommendation', 'card suggestions',
-    'which card', 'best card', 'recommend a card'
-  ];
-  const isCardQuery = creditCardKeywords.some(keyword => 
-    text.toLowerCase().includes(keyword.toLowerCase())
-  );
-  console.log('Is credit card query:', isCardQuery);
-  return isCardQuery;
-}
-
 serve(async (req) => {
   console.log('Received chat request');
   
@@ -42,48 +29,6 @@ serve(async (req) => {
       throw new Error('OpenRouter API key is not configured');
     }
 
-    if (containsCreditCardQuery(prompt)) {
-      console.log('Credit card query detected, using credit recommendations endpoint');
-      const supabaseUrl = Deno.env.get('SUPABASE_URL');
-      const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
-      
-      if (!supabaseUrl || !supabaseAnonKey) {
-        throw new Error('Missing Supabase configuration');
-      }
-
-      const response = await fetch(
-        `${supabaseUrl}/functions/v1/credit-recommendations`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${supabaseAnonKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ query: prompt })
-        }
-      );
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Credit recommendations error:', errorText);
-        throw new Error(`Failed to get credit recommendations: ${errorText}`);
-      }
-      
-      const data = await response.json();
-      console.log('Credit recommendations response:', data);
-      
-      return new Response(
-        JSON.stringify({ content: data?.recommendation || "I apologize, but I couldn't process your request at this time." }),
-        {
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-    }
-
-    console.log('Using regular chat for non-credit card query');
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
