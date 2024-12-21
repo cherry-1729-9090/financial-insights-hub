@@ -22,7 +22,6 @@ function containsCreditCardQuery(text: string): boolean {
 serve(async (req) => {
   console.log('Received chat request');
   
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -37,9 +36,8 @@ serve(async (req) => {
       throw new Error('OpenRouter API key is not configured');
     }
 
-    let generatedText;
+    let responseStream;
 
-    // Check if the prompt is about credit cards
     if (containsCreditCardQuery(prompt)) {
       console.log('Credit card query detected, using credit recommendations endpoint');
       const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -69,7 +67,18 @@ serve(async (req) => {
       
       const data = await response.json();
       console.log('Credit recommendations response:', data);
-      generatedText = data?.recommendation || "I apologize, but I couldn't process your request at this time.";
+      
+      // Create a ReadableStream for the credit recommendations response
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller) {
+          const recommendation = data?.recommendation || "I apologize, but I couldn't process your request at this time.";
+          controller.enqueue(encoder.encode(JSON.stringify({ content: recommendation }) + '\n'));
+          controller.close();
+        }
+      });
+      
+      responseStream = stream;
     } else {
       console.log('Using regular chat for non-credit card query');
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -85,13 +94,14 @@ serve(async (req) => {
           messages: [
             {
               role: "system",
-              content: "You are a helpful financial advisor. Provide clear, concise advice based on best financial practices. Keep responses under 150 words."
+              content: "You are a helpful financial advisor. Provide clear, concise advice based on best financial practices. Format your responses using markdown for better readability. Use bullet points and headers where appropriate."
             },
             {
               role: "user",
               content: prompt
             }
-          ]
+          ],
+          stream: true
         })
       });
 
@@ -101,16 +111,18 @@ serve(async (req) => {
         throw new Error(`Failed to get AI response: ${errorText}`);
       }
 
-      console.log('Received response from OpenRouter');
-      const data = await response.json();
-      console.log('OpenRouter response:', data);
-      generatedText = data.choices[0]?.message?.content || "I apologize, but I couldn't process your request at this time.";
+      responseStream = response.body;
     }
 
-    console.log('Final generated text:', generatedText);
-    return new Response(JSON.stringify({ generatedText }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    return new Response(responseStream, {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
+      }
     });
+
   } catch (error) {
     console.error('Error in chat function:', error);
     return new Response(
