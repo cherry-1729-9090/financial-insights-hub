@@ -71,54 +71,56 @@ export const useChat = () => {
 
       // Get AI response with streaming
       console.log('Requesting AI response...');
-      const { data: { session: authSession } } = await supabase.auth.getSession();
-      
-      if (!authSession?.access_token) {
-        throw new Error('No access token available');
-      }
-
-      const response = await fetch(`${process.env.VITE_SUPABASE_URL}/functions/v1/chat`, {
-        method: 'POST',
+      const response = await supabase.functions.invoke('chat', {
+        body: { prompt: message },
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authSession.access_token}`
-        },
-        body: JSON.stringify({ prompt: message })
+        }
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.data) {
+        throw new Error('No response data received');
       }
 
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
       let aiResponse = '';
-
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          
-          const chunk = decoder.decode(value);
+      const reader = new ReadableStream({
+        start(controller) {
           try {
-            const data = JSON.parse(chunk);
-            if (data.content) {
-              aiResponse += data.content;
-              // Update UI with streamed response
-              setMessages(prev => {
-                const newMessages = [...prev];
-                const lastMessage = newMessages[newMessages.length - 1];
-                if (lastMessage && lastMessage.isAi) {
-                  lastMessage.text = aiResponse;
-                  return newMessages;
-                } else {
-                  return [...prev, { text: aiResponse, isAi: true }];
-                }
-              });
+            const data = response.data;
+            if (typeof data === 'object' && data.content) {
+              aiResponse = data.content;
+              controller.enqueue(new TextEncoder().encode(JSON.stringify({ content: data.content })));
             }
-          } catch (e) {
-            console.log('Chunk processing error:', e);
+            controller.close();
+          } catch (error) {
+            controller.error(error);
           }
+        }
+      }).getReader();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = new TextDecoder().decode(value);
+        try {
+          const data = JSON.parse(chunk);
+          if (data.content) {
+            aiResponse = data.content;
+            // Update UI with streamed response
+            setMessages(prev => {
+              const newMessages = [...prev];
+              const lastMessage = newMessages[newMessages.length - 1];
+              if (lastMessage && lastMessage.isAi) {
+                lastMessage.text = aiResponse;
+                return newMessages;
+              } else {
+                return [...prev, { text: aiResponse, isAi: true }];
+              }
+            });
+          }
+        } catch (e) {
+          console.log('Chunk processing error:', e);
         }
       }
 
