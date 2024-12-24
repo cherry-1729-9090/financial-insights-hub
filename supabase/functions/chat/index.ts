@@ -54,7 +54,6 @@ async function performVectorSearch(supabase: any, queryEmbedding: number[], quer
     `)
     .order(`similarity`)
     .order(`text_rank`, { ascending: false })
-    .limit(limit);
 
   if (error) {
     console.error('Hybrid search error:', error);
@@ -102,7 +101,7 @@ serve(async (req) => {
         const embedding = await generateEmbedding(prompt);
         
         // Perform vector search using existing embedding column
-        const cards = await performVectorSearch(supabase, embedding);
+        const cards = await performVectorSearch(supabase, embedding, prompt);
 
         if (cards && cards.length > 0) {
           creditCardInfo = '\n\nBased on semantic search, here are the most relevant credit card recommendations:\n\n' +
@@ -140,9 +139,17 @@ serve(async (req) => {
       throw new Error('OpenRouter API key is not configured');
     }
 
-    const systemPrompt = isCreditCardQuery 
-      ? "You are a helpful financial advisor specializing in credit cards. Analyze the user's query and the provided credit card recommendations. Provide clear, concise advice and explain which cards might be most suitable and why. Format your responses using markdown for better readability."
-      : "You are a helpful financial advisor. Provide clear, concise advice based on best financial practices. Format your responses using markdown for better readability. Use bullet points and headers where appropriate.";
+    const systemPrompt = isCreditCardQuery
+      ? `You are a helpful financial advisor specializing in credit cards.
+        Analyze the user's query and the provided credit card recommendations.
+        Provide clear, concise advice and explain which cards might be most suitable and why.
+        Based on the user's credit profile, and available credit cards, provide the best possible advice.
+        Never encourage the vulgar, explicit, or inappropriate behavior.
+        `
+      : `You are a helpful financial advisor.
+       Provide clear, concise advice based on best financial practices.
+       Never encourage the vulgar, explicit, or inappropriate behavior.
+       `;
 
     console.log('Requesting AI response...');
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {

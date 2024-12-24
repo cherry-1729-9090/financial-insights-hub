@@ -1,17 +1,20 @@
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface SuggestedQuestionsProps {
   onSelectQuestion: (question: string) => void;
+  aiGeneratedQuestions?: string[] | JSX.Element[];
 }
 
-const SuggestedQuestions = ({ onSelectQuestion }: SuggestedQuestionsProps) => {
-  // Default questions in case the AI-generated ones aren't ready
-  const questions = [
-    `Given my credit score of 735, what steps can I take to improve it further?`,
-    `I have 21 running loans out of 66 total loans. Is this a healthy ratio?`,
-    `What strategies would you recommend for managing my total loan amount of ₹1.39 crores?`,
-    `How can I optimize my home loan of ₹77.7 lakhs and personal loan of ₹54.6 lakhs?`
-  ];
+const SuggestedQuestions = ({ onSelectQuestion, aiGeneratedQuestions }: SuggestedQuestionsProps) => {
+  const questions = aiGeneratedQuestions?.length > 0 
+    ? aiGeneratedQuestions 
+    : [
+        <Skeleton key={1} className="h-6 w-full" />, 
+        <Skeleton key={2} className="h-6 w-full" />, 
+        <Skeleton key={3} className="h-6 w-full" />, 
+        <Skeleton key={4} className="h-6 w-full" />
+      ];
 
   return (
     <div className="flex flex-col gap-3 p-4">
@@ -21,7 +24,7 @@ const SuggestedQuestions = ({ onSelectQuestion }: SuggestedQuestionsProps) => {
           key={index}
           variant="outline"
           className="justify-start text-left h-auto py-3 px-4"
-          onClick={() => onSelectQuestion(question)}
+          onClick={() => typeof question === 'string' ? onSelectQuestion(question) : null}
         >
           {question}
         </Button>

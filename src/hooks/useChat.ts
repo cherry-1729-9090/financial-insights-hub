@@ -4,186 +4,89 @@ import { toast } from "sonner";
 import { useChatMessages } from "./useChatMessages";
 import { useChatHistory } from "./useChatHistory";
 
-// Mock credit profile data
-const mockCreditProfile = {
-  credit_score: "735",
-  total_loan_amt: "13936790",
-  total_hl_amt: "7772878",
-  total_pl_amt: "5462400",
-  all_loan: "66",
-  running_loan: "21",
-  credit_utilization: "NA",
-  lenght_of_credit_history: "NA",
-  default_count: "NA",
-  late_payments: "NA",
-  monthly_income: "NA",
-  yearly_income: "NA",
-  employement_status: "Others",
-  foir: "NA",
-  gender: "NA"
-};
-
-// Fixed user ID for demo purposes - using a valid UUID format
 const DEMO_USER_ID = "123e4567-e89b-12d3-a456-426614174000";
 
-export const useChat = () => {
+export type PersonaType = {
+  situation: string;
+  goal: string;
+  criticalDataPoints: string[];
+  prompt?: string;  
+};
+
+export const useChat = (persona: PersonaType) => {
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
-  
   const { messages, setMessages, addMessage } = useChatMessages();
   const { chatHistory, createChatSession } = useChatHistory(DEMO_USER_ID);
+  const [aiQuestions, setAiQuestions] = useState<string[]>([]);
+  const [context, setContext] = useState<string[]>([]);
 
-  // Generate initial questions based on credit profile
-  useEffect(() => {
-    const generateInitialQuestions = async () => {
-      if (!showSuggestions) return;
+  const mockCreditProfile = {
+    credit_score: "735",
+    total_loan_amt: "13936790",
+    total_hl_amt: "7772878",
+    total_pl_amt: "5462400",
+    all_loan: "66",
+    running_loan: "21",
+    credit_utilization: "85",
+    foir: "60",
+    employement_status: "Employed",
+  };
 
-      console.log('Generating initial questions based on credit profile...');
-      try {
-        const { data, error } = await supabase.functions.invoke('chat', {
-          body: { 
-            prompt: `Based on this credit profile: Credit Score: ${mockCreditProfile.credit_score}, Total Loans: ${mockCreditProfile.all_loan}, Running Loans: ${mockCreditProfile.running_loan}, Total Loan Amount: ${mockCreditProfile.total_loan_amt}. Generate 4 relevant financial questions that would be helpful for the user to ask, focusing on credit management and loan optimization. Format the response as a simple array of 4 questions.`
-          }
-        });
-
-        if (error) throw error;
-
-        if (data?.content) {
-          // Parse the response and update suggested questions
-          const questions = JSON.parse(data.content);
-          // The questions will be used by the SuggestedQuestions component
-          console.log('Generated questions:', questions);
-        }
-      } catch (error) {
-        console.error('Error generating questions:', error);
-        toast.error("Failed to generate suggested questions");
-      }
-    };
-
-    generateInitialQuestions();
-  }, [showSuggestions]);
-
-  // Load chat messages when selecting a chat
-  useEffect(() => {
-    const loadChatMessages = async () => {
-      if (!selectedChat) {
-        setMessages([]);
-        return;
-      }
-
-      console.log('Loading messages for chat:', selectedChat);
-      const { data, error } = await supabase
-        .from('chat_messages')
-        .select('*')
-        .eq('session_id', selectedChat)
-        .order('created_at', { ascending: true });
-
-      if (error) {
-        console.error('Error loading chat messages:', error);
-        toast.error("Failed to load chat messages");
-        return;
-      }
-
-      console.log('Chat messages loaded:', data);
-      setMessages(
-        data.map(msg => ({
-          text: msg.content,
-          isAi: msg.role === 'assistant'
-        }))
-      );
-      setShowSuggestions(false);
-    };
-
-    loadChatMessages();
-  }, [selectedChat, setMessages]);
-
-  // Handle sending messages
   const handleSendMessage = async (message: string) => {
-    if (!message.trim()) {
-      console.log('Invalid message');
-      return;
-    }
-    
-    console.log('Sending message:', message);
+    if (!message.trim()) return;
+
     addMessage({ text: message, isAi: false });
     setShowSuggestions(false);
 
     try {
       let sessionId = selectedChat;
-      
       if (!sessionId) {
         sessionId = await createChatSession(message);
         setSelectedChat(sessionId);
       }
 
-      console.log('Saving user message to database...');
-      const { error: messageError } = await supabase
-        .from('chat_messages')
-        .insert([{
-          session_id: sessionId,
-          content: message,
-          role: 'user',
-          user_id: DEMO_USER_ID
-        }]);
+      setContext((prevContext) => [...prevContext, message]);
 
-      if (messageError) {
-        console.error('Failed to save message:', messageError);
-        toast.error("Failed to save message");
-        throw messageError;
-      }
-
-      console.log('Requesting AI response...');
       const { data, error } = await supabase.functions.invoke('chat', {
-        body: { 
-          prompt: `Given this user's credit profile (Credit Score: ${mockCreditProfile.credit_score}, Total Loans: ${mockCreditProfile.all_loan}, Running Loans: ${mockCreditProfile.running_loan}), please provide a detailed response to their question: ${message}`,
+        body: {
+          prompt: `
+          Please consider the following persona and credit profile when answering the user's question:
+          Persona: ${persona?.situation}, 
+          Goal: ${persona?.goal}, Credit Profile: ${JSON.stringify(mockCreditProfile)}, 
+          Context: ${context.join(' ')}, User Question: ${message}
+          Most critical data points: ${persona?.criticalDataPoints.join(', ')}
+          Now considering all the above information, as you are the best financial advisor, answer the user's question.          
+          `
         }
       });
 
-      if (error) {
-        console.error('AI response error:', error);
-        toast.error("Failed to get AI response");
-        throw error;
-      }
+      if (error) throw error;
+      const aiResponse = data?.content || "Unable to provide a response at the moment.";
 
-      if (!data || !data.content) {
-        throw new Error('Invalid response format from AI');
-      }
-
-      const aiResponse = data.content;
-      console.log('AI response received:', aiResponse);
-      
       addMessage({ text: aiResponse, isAi: true });
 
-      await supabase
-        .from('chat_messages')
-        .insert([{
-          session_id: sessionId,
-          content: aiResponse,
-          role: 'assistant',
-          user_id: DEMO_USER_ID
-        }]);
+      await supabase.from('chat_messages').insert([
+        { session_id: sessionId, content: aiResponse, role: 'assistant', user_id: DEMO_USER_ID }
+      ]);
 
-      console.log('Message exchange completed successfully');
+      setContext((prevContext) => [...prevContext, aiResponse]);
     } catch (error) {
-      console.error("Error in message handling:", error);
       toast.error("An error occurred. Please try again.");
+      console.error("Error handling message:", error);
     }
-  };
-
-  const handleNewChat = () => {
-    console.log('Starting new chat...');
-    setSelectedChat(null);
-    setMessages([]);
-    setShowSuggestions(true);
   };
 
   return {
     messages,
     chatHistory,
-    selectedChat,
-    showSuggestions,
     handleSendMessage,
-    handleNewChat,
+    handleNewChat: () => {
+      setSelectedChat(null);
+      setContext([]);
+    },
+    selectedChat,
     setSelectedChat,
+    showSuggestions,
   };
 };

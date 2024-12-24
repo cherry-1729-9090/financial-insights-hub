@@ -1,13 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ChatMessage from "@/components/ChatMessage";
 import ChatSidebar from "@/components/ChatSidebar";
 import ChatHeader from "@/components/ChatHeader";
 import ChatInput from "@/components/ChatInput";
 import SuggestedQuestions from "@/components/SuggestedQuestions";
-import { useChat } from "@/hooks/useChat";
+import { PersonaType, useChat } from "@/hooks/useChat";
+import { generateQuestions } from "@/lib/generateQuestions";
+
 
 const Chat = () => {
   const [inputMessage, setInputMessage] = useState("");
+  const [aiQuestions, setAiQuestions] = useState<string[]>([]);
+  const [persona, setPersona] = useState<PersonaType | null>(null);
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      const { questions, persona } = await generateQuestions();
+      setAiQuestions(questions);
+      setPersona(persona);
+    };
+    fetchQuestions();
+  }, []);
   const {
     messages,
     chatHistory,
@@ -16,7 +28,8 @@ const Chat = () => {
     handleSendMessage,
     handleNewChat,
     setSelectedChat,
-  } = useChat();
+  } = useChat(persona);
+  
 
   return (
     <div className="flex h-screen bg-gray-50/50">
@@ -32,7 +45,7 @@ const Chat = () => {
 
         <div className="flex-1 overflow-auto p-4">
           {showSuggestions && messages.length === 0 ? (
-            <SuggestedQuestions onSelectQuestion={handleSendMessage} />
+            <SuggestedQuestions onSelectQuestion={handleSendMessage} aiGeneratedQuestions={aiQuestions} />
           ) : (
             messages.map((msg, idx) => (
               <ChatMessage key={idx} message={msg.text} isAi={msg.isAi} />
