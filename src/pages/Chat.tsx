@@ -8,13 +8,13 @@ import { PersonaType, useChat } from "@/hooks/useChat";
 import { generateQuestions } from "@/lib/generateQuestions";
 
 
-const Chat = () => {
+const Chat = ( userData: any ) => {
   const [inputMessage, setInputMessage] = useState("");
   const [aiQuestions, setAiQuestions] = useState<string[]>([]);
   const [persona, setPersona] = useState<PersonaType | null>(null);
   useEffect(() => {
     const fetchQuestions = async () => {
-      const { questions, persona } = await generateQuestions();
+      const { questions, persona } = await generateQuestions(userData);
       setAiQuestions(questions);
       setPersona(persona);
     };

@@ -124,17 +124,7 @@ type PersonaType = {
 };
 
 
-export const generateQuestions = async (creditProfile = {
-  credit_score: "735",
-  total_loan_amt: "13936790",
-  total_hl_amt: "7772878",
-  total_pl_amt: "5462400",
-  all_loan: "66",
-  running_loan: "21",
-  credit_utilization: "85",
-  foir: "60",
-  employement_status: "Employed",
-}): Promise<{ questions: string[]; persona: PersonaType }> => {
+export const generateQuestions = async (creditProfile: any): Promise<{ questions: string[]; persona: PersonaType }> => {
   const personaId = determinePersona(creditProfile);
   const persona = personas[personaId];
 
