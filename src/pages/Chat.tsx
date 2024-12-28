@@ -65,6 +65,11 @@ const Chat = ({ userData }: any) => {
     loadChatHistory();
   }, [selectedChat, setMessages]);
 
+  const handleQuestionSelect = async (question: string) => {
+    setInputMessage(""); // Clear input field
+    await handleSendMessage(question);
+  };
+
   return (
     <div className="flex h-screen overflow-hidden">
       <ChatSidebar
@@ -129,7 +134,7 @@ const Chat = ({ userData }: any) => {
                         Let's start with some personalized questions based on your profile:
                       </p>
                       <SuggestedQuestions
-                        onSelectQuestion={handleSendMessage}
+                        onSelectQuestion={handleQuestionSelect}
                         aiGeneratedQuestions={aiQuestions}
                       />
                     </div>
