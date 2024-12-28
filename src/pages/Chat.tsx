@@ -8,11 +8,14 @@ import { PersonaType, useChat } from "@/hooks/useChat";
 import { generateQuestions } from "@/lib/generateQuestions";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { ChevronLeft } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const Chat = ({ userData }: any) => {
   const [inputMessage, setInputMessage] = useState("");
   const [aiQuestions, setAiQuestions] = useState<string[]>([]);
   const [persona, setPersona] = useState<PersonaType | null>(null);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -43,7 +46,6 @@ const Chat = ({ userData }: any) => {
     scrollToBottom();
   }, [messages]);
 
-  // Load chat history when selecting a chat
   useEffect(() => {
     const loadChatHistory = async () => {
       if (selectedChat) {
@@ -70,16 +72,39 @@ const Chat = ({ userData }: any) => {
     await handleSendMessage(question);
   };
 
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed(!isSidebarCollapsed);
+  };
+
   return (
     <div className="flex h-screen overflow-hidden">
-      <ChatSidebar
-        history={chatHistory}
-        onSelectChat={setSelectedChat}
-        selectedChat={selectedChat}
-        onNewChat={handleNewChat}
-      />
+      <div className={cn(
+        "transition-all duration-300 ease-in-out",
+        isSidebarCollapsed ? "w-0" : "w-80"
+      )}>
+        <ChatSidebar
+          history={chatHistory}
+          onSelectChat={setSelectedChat}
+          selectedChat={selectedChat}
+          onNewChat={handleNewChat}
+          className={cn(
+            "transition-all duration-300 ease-in-out",
+            isSidebarCollapsed ? "-translate-x-full" : "translate-x-0"
+          )}
+        />
+      </div>
       
-      <div className="flex-1 flex flex-col glass-effect shadow-lg overflow-hidden">
+      <div className="flex-1 flex flex-col glass-effect shadow-lg overflow-hidden relative">
+        <button
+          onClick={toggleSidebar}
+          className="absolute left-4 top-4 z-50 p-2 rounded-full bg-white/80 hover:bg-white shadow-md transition-all duration-200 hover:scale-105"
+        >
+          <ChevronLeft className={cn(
+            "h-4 w-4 text-primary transition-transform duration-300",
+            isSidebarCollapsed ? "rotate-180" : "rotate-0"
+          )} />
+        </button>
+        
         <ChatHeader userData={userData} />
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-4">
