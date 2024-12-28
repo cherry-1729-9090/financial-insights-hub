@@ -68,7 +68,7 @@ const Chat = ({ userData }: any) => {
   }, [selectedChat, setMessages]);
 
   const handleQuestionSelect = async (question: string) => {
-    setInputMessage(""); // Clear input field
+    setInputMessage(""); 
     await handleSendMessage(question);
   };
 
@@ -94,17 +94,21 @@ const Chat = ({ userData }: any) => {
         />
       </div>
       
-      <div className="flex-1 flex flex-col glass-effect shadow-lg overflow-hidden relative">
+      {/* Toggle button positioned in the middle of the separator */}
+      <div className="relative">
         <button
           onClick={toggleSidebar}
-          className="absolute left-4 top-4 z-50 p-2 rounded-full bg-white/80 hover:bg-white shadow-md transition-all duration-200 hover:scale-105"
+          className="absolute top-1/2 -left-3 z-50 p-2 rounded-full bg-white/80 hover:bg-white shadow-md transition-all duration-200 hover:scale-105"
+          style={{ transform: 'translateY(-50%)' }}
         >
           <ChevronLeft className={cn(
             "h-4 w-4 text-primary transition-transform duration-300",
             isSidebarCollapsed ? "rotate-180" : "rotate-0"
           )} />
         </button>
-        
+      </div>
+      
+      <div className="flex-1 flex flex-col glass-effect shadow-lg overflow-hidden">
         <ChatHeader userData={userData} />
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-4">
@@ -170,7 +174,7 @@ const Chat = ({ userData }: any) => {
                   {messages.map((msg, idx) => (
                     <ChatMessage key={idx} message={msg.text} isAi={msg.isAi} />
                   ))}
-                  <div ref={messagesEndRef} /> {/* Scroll anchor */}
+                  <div ref={messagesEndRef} />
                 </div>
               )}
             </div>
