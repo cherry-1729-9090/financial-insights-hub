@@ -12,14 +12,13 @@ const ChatMessage = ({ message, isAi = false }: ChatMessageProps) => {
     <div
       className={cn(
         "flex gap-4 p-4 rounded-lg transition-all duration-200 hover:bg-white/50 w-full",
-        isAi ? "bg-blue-50/50" : "bg-indigo-50/50",
         isAi ? "justify-start" : "justify-end"
       )}
     >
-      <div className="flex gap-4 max-w-[80%] w-full">
+      <div className={cn("flex gap-4 max-w-[80%] w-full p-4 rounded-lg", isAi ? "bg-blue-50/50 backdrop-blur-sm border border-blue-100" : "bg-indigo-50/50 backdrop-blur-sm border border-indigo-100")}>
         <div className={cn(
           "shrink-0 mt-1 p-2 h-fit rounded-full",
-          isAi ? "bg-primary text-white order-first" : "bg-secondary text-primary order-last"
+          isAi ? "bg-primary text-white order-first bg-blue-500" : "bg-secondary text-primary order-last bg-indigo-500"
         )}>
           {isAi ? (
             <Bot className="h-4 w-4" />

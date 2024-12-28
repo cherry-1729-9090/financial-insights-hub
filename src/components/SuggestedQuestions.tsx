@@ -23,10 +23,12 @@ const SuggestedQuestions = ({ onSelectQuestion, aiGeneratedQuestions }: Suggeste
         <Button
           key={index}
           variant="outline"
-          className="justify-start text-left h-auto py-3 px-4"
+          className="justify-start text-left h-auto py-3 px-4 w-full"
           onClick={() => typeof question === 'string' ? onSelectQuestion(question) : null}
         >
-          {question}
+          <span className="whitespace-normal break-words text-sm text-wrap-auto">
+            {question}
+          </span>
         </Button>
       ))}
     </div>
