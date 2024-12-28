@@ -15,6 +15,17 @@ const Chat = ({ userData }: any) => {
   const [persona, setPersona] = useState<PersonaType | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const {
+    messages,
+    chatHistory,
+    selectedChat,
+    showSuggestions,
+    handleSendMessage,
+    handleNewChat,
+    setSelectedChat,
+    setMessages,
+  } = useChat(persona);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -30,17 +41,7 @@ const Chat = ({ userData }: any) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]); // Scroll when messages update
-
-  const {
-    messages,
-    chatHistory,
-    selectedChat,
-    showSuggestions,
-    handleSendMessage,
-    handleNewChat,
-    setSelectedChat,
-  } = useChat(persona);
+  }, [messages]);
 
   // Load chat history when selecting a chat
   useEffect(() => {
@@ -53,7 +54,6 @@ const Chat = ({ userData }: any) => {
           .order('created_at', { ascending: true });
         
         if (data) {
-          // Update messages with historical data
           const formattedMessages = data.map(msg => ({
             text: msg.content,
             isAi: msg.role === 'assistant'
