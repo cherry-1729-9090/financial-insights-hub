@@ -41,10 +41,10 @@ const Chat = ({ userData }: any) => {
         onNewChat={handleNewChat}
       />
       
-      <div className="flex-1 flex flex-col glass-effect shadow-lg">
+      <div className="flex-1 flex flex-col glass-effect shadow-lg overflow-hidden">
         <ChatHeader userData={userData} />
 
-        <div className="flex-1 custom-scrollbar p-4">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4">
           <Card className="min-h-full bg-white/50 backdrop-blur-sm border-none shadow-sm">
             <div className="p-4 space-y-4">
               {showSuggestions && messages.length === 0 ? (
@@ -56,10 +56,12 @@ const Chat = ({ userData }: any) => {
                     <p className="text-gray-600 mb-4">
                       Based on your profile, here are some questions you might find helpful:
                     </p>
-                    <SuggestedQuestions
-                      onSelectQuestion={handleSendMessage}
-                      aiGeneratedQuestions={aiQuestions}
-                    />
+                    <div className="max-w-full overflow-hidden">
+                      <SuggestedQuestions
+                        onSelectQuestion={handleSendMessage}
+                        aiGeneratedQuestions={aiQuestions}
+                      />
+                    </div>
                   </div>
                 </div>
               ) : (
