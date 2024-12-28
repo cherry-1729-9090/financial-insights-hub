@@ -41,33 +41,37 @@ const Chat = ({ userData }: any) => {
         onNewChat={handleNewChat}
       />
       
-      <div className="flex-1 flex flex-col bg-white/80 backdrop-blur-sm shadow-lg">
+      <div className="flex-1 flex flex-col glass-effect shadow-lg">
         <ChatHeader userData={userData} />
 
-        <Card className="flex-1 overflow-auto p-4 m-4 bg-white/50 backdrop-blur-sm border-none shadow-sm">
-          {showSuggestions && messages.length === 0 ? (
-            <div className="space-y-4">
-              <div className="p-4 rounded-lg bg-blue-50/50 backdrop-blur-sm border border-blue-100">
-                <h2 className="text-lg font-semibold text-primary mb-2">
-                  Welcome to Your AI Financial Advisor
-                </h2>
-                <p className="text-gray-600 mb-4">
-                  Based on your profile, here are some questions you might find helpful:
-                </p>
-                <SuggestedQuestions
-                  onSelectQuestion={handleSendMessage}
-                  aiGeneratedQuestions={aiQuestions}
-                />
-              </div>
+        <div className="flex-1 custom-scrollbar p-4">
+          <Card className="min-h-full bg-white/50 backdrop-blur-sm border-none shadow-sm">
+            <div className="p-4 space-y-4">
+              {showSuggestions && messages.length === 0 ? (
+                <div className="space-y-4">
+                  <div className="p-4 rounded-lg bg-blue-50/50 backdrop-blur-sm border border-blue-100">
+                    <h2 className="text-lg font-semibold text-primary mb-2">
+                      Welcome to Your AI Financial Advisor
+                    </h2>
+                    <p className="text-gray-600 mb-4">
+                      Based on your profile, here are some questions you might find helpful:
+                    </p>
+                    <SuggestedQuestions
+                      onSelectQuestion={handleSendMessage}
+                      aiGeneratedQuestions={aiQuestions}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {messages.map((msg, idx) => (
+                    <ChatMessage key={idx} message={msg.text} isAi={msg.isAi} />
+                  ))}
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="space-y-4">
-              {messages.map((msg, idx) => (
-                <ChatMessage key={idx} message={msg.text} isAi={msg.isAi} />
-              ))}
-            </div>
-          )}
-        </Card>
+          </Card>
+        </div>
 
         <div className="p-4">
           <ChatInput
