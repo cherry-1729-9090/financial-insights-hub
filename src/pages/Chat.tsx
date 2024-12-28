@@ -61,6 +61,7 @@ const Chat = ({ userData }: any) => {
             isAi: msg.role === 'assistant'
           }));
           setMessages(formattedMessages);
+          scrollToBottom();
         }
       }
     };
