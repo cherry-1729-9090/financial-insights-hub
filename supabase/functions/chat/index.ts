@@ -7,67 +7,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-async function generateEmbedding(text: string) {
-  console.log('Generating embedding for:', text);
-  const togetherApiKey = Deno.env.get('TOGETHER_API_KEY');
-  
-  if (!togetherApiKey) {
-    throw new Error('TOGETHER_API_KEY is not configured');
-  }
-
-  try {
-    const response = await fetch('https://api.together.xyz/v1/embeddings', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${togetherApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'togethercomputer/m2-bert-80M-8k-base',
-        input: text,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to generate embedding: ${await response.text()}`);
-    }
-
-    const data = await response.json();
-    return data.data[0].embedding;
-  } catch (error) {
-    console.error('Error generating embedding:', error);
-    throw error;
-  }
-}
-
-async function performVectorSearch(supabase: any, queryEmbedding: number[], queryText: string, limit = 3) {
-  console.log('Performing hybrid search (vector + full-text)');
-
-  const embeddingVector = `[${queryEmbedding.join(',')}]`;
-
-  const { data: similarCards, error } = await supabase
-    .from('credit_cards')
-    .select(`
-      *, 
-      (embedding <-> '${embeddingVector}'::vector) AS similarity,
-      ts_rank_cd(to_tsvector('english', features), plainto_tsquery(${queryText})) AS text_rank
-    `)
-    .order(`similarity`)
-    .order(`text_rank`, { ascending: false })
-
-  if (error) {
-    console.error('Hybrid search error:', error);
-    throw error;
-  }
-
-  console.log('Hybrid search results:', similarCards);
-  return similarCards;
-}
-
-
 serve(async (req) => {
   console.log('Received chat request');
   
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -81,6 +24,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
     if (!supabaseUrl || !supabaseKey) {
+      console.error('Missing Supabase configuration');
       throw new Error('Missing Supabase configuration');
     }
 
@@ -139,18 +83,6 @@ serve(async (req) => {
       throw new Error('OpenRouter API key is not configured');
     }
 
-    const systemPrompt = isCreditCardQuery
-      ? `You are a helpful financial advisor specializing in credit cards.
-        Analyze the user's query and the provided credit card recommendations.
-        Provide clear, concise advice and explain which cards might be most suitable and why.
-        Based on the user's credit profile, and available credit cards, provide the best possible advice.
-        Never encourage the vulgar, explicit, or inappropriate behavior.
-        `
-      : `You are a helpful financial advisor.
-       Provide clear, concise advice based on best financial practices.
-       Never encourage the vulgar, explicit, or inappropriate behavior.
-       `;
-
     console.log('Requesting AI response...');
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -165,7 +97,15 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: systemPrompt
+            content: isCreditCardQuery
+              ? `You are a helpful financial advisor specializing in credit cards.
+                Analyze the user's query and the provided credit card recommendations.
+                Provide clear, concise advice and explain which cards might be most suitable and why.
+                Based on the user's credit profile, and available credit cards, provide the best possible advice.
+                Never encourage vulgar, explicit, or inappropriate behavior.`
+              : `You are a helpful financial advisor.
+                Provide clear, concise advice based on best financial practices.
+                Never encourage vulgar, explicit, or inappropriate behavior.`
           },
           {
             role: "user",
@@ -211,3 +151,61 @@ serve(async (req) => {
     );
   }
 });
+
+async function generateEmbedding(text: string) {
+  console.log('Generating embedding for:', text);
+  const togetherApiKey = Deno.env.get('TOGETHER_API_KEY');
+  
+  if (!togetherApiKey) {
+    throw new Error('TOGETHER_API_KEY is not configured');
+  }
+
+  try {
+    const response = await fetch('https://api.together.xyz/v1/embeddings', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${togetherApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'togethercomputer/m2-bert-80M-8k-base',
+        input: text,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to generate embedding: ${await response.text()}`);
+    }
+
+    const data = await response.json();
+    return data.data[0].embedding;
+  } catch (error) {
+    console.error('Error generating embedding:', error);
+    throw error;
+  }
+}
+
+async function performVectorSearch(supabase: any, queryEmbedding: number[], queryText: string, limit = 3) {
+  console.log('Performing hybrid search (vector + full-text)');
+
+  const embeddingVector = `[${queryEmbedding.join(',')}]`;
+
+  const { data: similarCards, error } = await supabase
+    .from('credit_cards')
+    .select(`
+      *, 
+      (embedding <-> '${embeddingVector}'::vector) AS similarity,
+      ts_rank_cd(to_tsvector('english', features), plainto_tsquery(${queryText})) AS text_rank
+    `)
+    .order(`similarity`)
+    .order(`text_rank`, { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error('Hybrid search error:', error);
+    throw error;
+  }
+
+  console.log('Hybrid search results:', similarCards);
+  return similarCards;
+}
