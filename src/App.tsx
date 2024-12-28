@@ -5,7 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Chat from "./pages/Chat";
-import {  fetchUserCreditProfile } from "./lib/utils";
+import { fetchUserCreditProfile } from "./lib/utils";
+import { useToast } from "@/components/ui/use-toast";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,21 +19,53 @@ const queryClient = new QueryClient({
 
 const App = () => {
   const [userData, setUserData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
   useEffect(() => {
     const fetchData = async () => {
-      const data = await fetchUserCreditProfile();
-      setUserData(data);
+      try {
+        const data = await fetchUserCreditProfile();
+        setUserData(data);
+        if (!data.credit_score) {
+          toast({
+            title: "Using Demo Data",
+            description: "No user token provided. Using demo data for demonstration.",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to fetch user data. Using demo data.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     };
     fetchData();
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
+        <div className="animate-pulse text-primary font-semibold">
+          Loading your financial profile...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <TooltipProvider>
-          <Routes>
-            <Route path="/" element={<Chat userData={userData} />} />
-          </Routes>
+          <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+            <Routes>
+              <Route path="/" element={<Chat userData={userData} />} />
+            </Routes>
+          </div>
           <Toaster />
           <Sonner />
         </TooltipProvider>

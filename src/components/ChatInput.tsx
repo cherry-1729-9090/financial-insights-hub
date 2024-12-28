@@ -12,18 +12,18 @@ const ChatInput = ({ inputMessage, setInputMessage, handleSendMessage }: ChatInp
   const onSendMessage = () => {
     if (inputMessage.trim()) {
       handleSendMessage(inputMessage);
-      setInputMessage(''); // Clear the input after sending
+      setInputMessage('');
     }
   };
 
   return (
-    <div className="p-3 border-t bg-white/50 backdrop-blur-sm">
+    <div className="relative">
       <div className="flex gap-2">
         <Input
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           placeholder="Type your financial question..."
-          className="flex-1"
+          className="flex-1 bg-white/80 backdrop-blur-sm border-blue-100 focus-visible:ring-primary"
           onKeyPress={(e) => {
             if (e.key === 'Enter') {
               onSendMessage();
@@ -33,6 +33,7 @@ const ChatInput = ({ inputMessage, setInputMessage, handleSendMessage }: ChatInp
         <Button 
           onClick={onSendMessage}
           disabled={!inputMessage.trim()}
+          className="bg-primary hover:bg-primary/90 text-white"
         >
           <Send className="h-4 w-4" />
         </Button>
