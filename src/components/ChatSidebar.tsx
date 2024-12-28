@@ -48,8 +48,8 @@ const ChatSidebar = ({
             className={cn(
               "w-full justify-start text-left relative group transition-all duration-200",
               selectedChat === chat.id 
-                ? "bg-blue-50/80 hover:bg-blue-100/80 text-primary" 
-                : "hover:bg-white/60",
+                ? "bg-blue-100/80 hover:bg-blue-200/80 text-primary shadow-sm" 
+                : "hover:bg-white/60 bg-[#F1F0FB]/50",
               "rounded-lg backdrop-blur-sm"
             )}
             onClick={() => onSelectChat(chat.id)}

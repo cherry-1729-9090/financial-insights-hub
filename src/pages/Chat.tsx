@@ -49,14 +49,23 @@ const Chat = ({ userData }: any) => {
             <div className="p-4 space-y-4">
               {showSuggestions && messages.length === 0 ? (
                 <div className="space-y-4">
-                  <div className="p-4 rounded-lg bg-blue-50/50 backdrop-blur-sm border border-blue-100">
-                    <h2 className="text-lg font-semibold text-primary mb-2">
+                  <div className="p-6 rounded-lg bg-blue-50/50 backdrop-blur-sm border border-blue-100">
+                    <h2 className="text-2xl font-semibold text-primary mb-3">
                       Welcome to Your AI Financial Advisor
                     </h2>
-                    <p className="text-gray-600 mb-4">
-                      Based on your profile, here are some questions you might find helpful:
+                    <p className="text-gray-600 mb-4 leading-relaxed">
+                      I'm here to help you make informed financial decisions. I can analyze your credit profile, 
+                      provide personalized advice, and answer any questions about loans, credit cards, or general 
+                      financial planning.
+                    </p>
+                    <p className="text-gray-600 mb-6">
+                      Your current credit score is <span className="font-semibold">{userData?.credit_score}</span>, 
+                      and I've prepared some relevant questions based on your financial profile.
                     </p>
                     <div className="max-w-full overflow-hidden">
+                      <p className="text-sm text-gray-500 mb-4 font-medium">
+                        Here are some questions to get you started:
+                      </p>
                       <SuggestedQuestions
                         onSelectQuestion={handleSendMessage}
                         aiGeneratedQuestions={aiQuestions}
