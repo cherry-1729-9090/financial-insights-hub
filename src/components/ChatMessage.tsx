@@ -16,7 +16,7 @@ const ChatMessage = ({ message, isAi = false }: ChatMessageProps) => {
         isAi ? "justify-start" : "justify-end"
       )}
     >
-      <div className="flex gap-4 max-w-[80%]">
+      <div className="flex gap-4 max-w-[80%] w-full">
         <div className={cn(
           "shrink-0 mt-1 p-2 h-fit rounded-full",
           isAi ? "bg-primary text-white order-first" : "bg-secondary text-primary order-last"
@@ -27,11 +27,11 @@ const ChatMessage = ({ message, isAi = false }: ChatMessageProps) => {
             <MessageCircle className="h-4 w-4" />
           )}
         </div>
-        <div className="space-y-2 overflow-hidden">
+        <div className="space-y-2 overflow-hidden flex-1">
           <p className="text-sm font-medium text-gray-700">
             {isAi ? "AI Financial Advisor" : "You"}
           </p>
-          <div className="prose prose-sm max-w-none w-full break-words prose-p:leading-relaxed prose-p:my-1 prose-headings:mb-2 prose-headings:mt-4 first:prose-headings:mt-0 prose-li:my-0.5 prose-ul:my-2 prose-a:text-primary hover:prose-a:text-primary/80">
+          <div className="prose prose-sm max-w-none w-full break-words whitespace-pre-wrap prose-p:leading-relaxed prose-p:my-1 prose-headings:mb-2 prose-headings:mt-4 first:prose-headings:mt-0 prose-li:my-0.5 prose-ul:my-2 prose-a:text-primary hover:prose-a:text-primary/80">
             <ReactMarkdown>{message}</ReactMarkdown>
           </div>
         </div>
