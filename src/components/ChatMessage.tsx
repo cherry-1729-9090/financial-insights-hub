@@ -1,4 +1,4 @@
-import { MessageCircle, Bot } from "lucide-react";
+import { MessageCircle, Bot, DollarSign } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
 
@@ -16,14 +16,14 @@ const ChatMessage = ({ message, isAi = false }: ChatMessageProps) => {
       )}
     >
       <div className={cn("flex gap-4 max-w-[80%] w-auto p-4 rounded-lg", 
-        isAi ? "bg-blue-50/50 backdrop-blur-sm border border-blue-100" :
-         "bg-indigo-50/50 backdrop-blur-sm border border-indigo-100")}>
+        isAi ? "bg-gradient-to-br from-blue-50/50 to-indigo-50/50 backdrop-blur-sm border border-blue-100" :
+         "bg-gradient-to-br from-indigo-50/50 to-purple-50/50 backdrop-blur-sm border border-indigo-100")}>
         <div className={cn(
           "shrink-0 mt-1 p-2 h-fit rounded-full",
-          isAi ? "bg-primary text-white order-first bg-blue-500" : "bg-secondary text-primary order-last bg-indigo-500"
+          isAi ? "bg-primary text-white order-first" : "bg-secondary text-primary order-last"
         )}>
           {isAi ? (
-            <Bot className="h-4 w-4" />
+            <DollarSign className="h-4 w-4" />
           ) : (
             <MessageCircle className="h-4 w-4" />
           )}
@@ -33,7 +33,7 @@ const ChatMessage = ({ message, isAi = false }: ChatMessageProps) => {
             {isAi ? "AI Financial Advisor" : "You"}
           </p>
           <div className="prose prose-sm max-w-none w-full break-words whitespace-pre-wrap prose-p:leading-relaxed prose-p:my-1 prose-headings:mb-2 prose-headings:mt-4 first:prose-headings:mt-0 prose-li:my-0.5 prose-ul:my-2 prose-a:text-primary hover:prose-a:text-primary/80">
-            {message}
+            <ReactMarkdown>{message}</ReactMarkdown>
           </div>
         </div>
       </div>
