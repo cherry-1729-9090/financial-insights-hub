@@ -17,13 +17,13 @@ const Chat = ({ userData }: any) => {
 
   const {
     messages,
+    setMessages,
     chatHistory,
     selectedChat,
     showSuggestions,
     handleSendMessage,
     handleNewChat,
     setSelectedChat,
-    setMessages,
   } = useChat(persona);
 
   const scrollToBottom = () => {
@@ -63,7 +63,7 @@ const Chat = ({ userData }: any) => {
       }
     };
     loadChatHistory();
-  }, [selectedChat]);
+  }, [selectedChat, setMessages]);
 
   return (
     <div className="flex h-screen overflow-hidden">

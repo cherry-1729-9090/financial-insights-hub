@@ -79,6 +79,7 @@ export const useChat = (persona: PersonaType) => {
 
   return {
     messages,
+    setMessages, // Now explicitly returning setMessages
     chatHistory,
     handleSendMessage,
     handleNewChat: () => {
