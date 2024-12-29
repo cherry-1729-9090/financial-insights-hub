@@ -6,7 +6,7 @@ const ChatHeader = ({ userData }: { userData: any }) => {
   const navigate = useNavigate();
   
   return (
-    <div className="p-4 border-b flex items-center justify-between bg-white/80 backdrop-blur-sm">
+    <div className="p-4 border-b flex items-center justify-between bg-indigo-50/50 backdrop-blur-sm">
       <div className="flex items-center gap-3">
         <Button
           variant="ghost"
@@ -26,7 +26,7 @@ const ChatHeader = ({ userData }: { userData: any }) => {
       
       {userData && (
         <div className="flex gap-4 text-sm text-gray-600">
-          <div className="px-3 py-1 rounded-full bg-blue-50">
+          <div className="px-3 py-1 rounded-full bg-blue-100">
             FOIR: {userData.foir}%
           </div>
           <div className="px-3 py-1 rounded-full bg-green-50">
