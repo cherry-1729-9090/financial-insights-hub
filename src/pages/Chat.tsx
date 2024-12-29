@@ -95,7 +95,6 @@ const Chat = ({ userData }: any) => {
         />
       </div>
       
-      {/* Toggle button positioned in the middle of the separator */}
       <div className="relative">
         <button
           onClick={toggleSidebar}
@@ -138,28 +137,19 @@ const Chat = ({ userData }: any) => {
                         Your Personal Financial AI Advisor
                       </h2>
                     </div>
-                    <p className="text-gray-600 mb-4 leading-relaxed">
-                      I specialize in providing personalized financial guidance based on your unique profile. With access to your credit information and financial history, I can help you make informed decisions about:
-                    </p>
-                    <ul className="list-disc list-inside mb-6 text-gray-600 space-y-2">
-                      <li>Credit score improvement strategies</li>
-                      <li>Loan and credit card recommendations</li>
-                      <li>Debt management advice</li>
-                      <li>Financial planning and budgeting</li>
-                    </ul>
-                    <div className="p-4 bg-blue-100/50 rounded-lg mb-6">
-                      <p className="text-primary font-medium">
-                        Your Credit Profile Overview:
+                    <div className="space-y-4">
+                      <p className="text-lg text-gray-700 leading-relaxed">
+                        👋 Hey Satya, Welcome to Minemi AI!
                       </p>
                       <p className="text-gray-600">
-                        Credit Score: <span className="font-semibold">{userData?.credit_score}</span>
-                        <span className="mx-2">•</span>
-                        FOIR: <span className="font-semibold">{userData?.foir}%</span>
-                        <span className="mx-2">•</span>
-                        Active Loans: <span className="font-semibold">{userData?.running_loan}</span>
+                        ✨ We see your credit score is <span className="font-semibold">{userData?.credit_score}</span> and 
+                        you have <span className="font-semibold">{userData?.running_loan} active loans</span>.
+                      </p>
+                      <p className="text-gray-600">
+                        Let's explore ways to reduce EMIs, boost your score, or find top-up options.
                       </p>
                     </div>
-                    <div className="max-w-full overflow-hidden">
+                    <div className="mt-6">
                       <p className="text-sm text-gray-500 mb-4 font-medium">
                         Let's start with some personalized questions based on your profile:
                       </p>
