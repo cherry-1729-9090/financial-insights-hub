@@ -18,7 +18,7 @@ const SuggestedQuestions = ({ onSelectQuestion, aiGeneratedQuestions }: Suggeste
 
   return (
     <div className="flex flex-col gap-3 p-4">
-      <p className="text-sm text-gray-500 mb-2">Select a question to get started:</p>
+      {/* <p className="text-sm text-gray-500 mb-2">Select a question to get started:</p> */}
       {questions.map((question, index) => (
         <Button
           key={index}

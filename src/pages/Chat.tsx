@@ -139,7 +139,7 @@ const Chat = ({ userData }: any) => {
                     </div>
                     <div className="space-y-4">
                       <p className="text-lg text-gray-700 leading-relaxed">
-                        👋 Hey Satya, Welcome to Minemi AI!
+                        👋 Hey {userData?.name || 'there'}, Welcome to Minemi AI!
                       </p>
                       <p className="text-gray-600">
                         ✨ We see your credit score is <span className="font-semibold">{userData?.credit_score}</span> and 

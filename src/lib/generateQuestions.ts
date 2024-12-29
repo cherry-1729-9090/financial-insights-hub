@@ -135,7 +135,8 @@ export const generateQuestions = async (creditProfile: any): Promise<{ questions
       Please donot use any markdown or code blocks, just send the questions in a plain text format.
       And please donot use any other text or comments, just send the questions in a plain text format.
       Please donot add comments like "Here are four questions that could help a user with" or anything like that.
-      Just send the questions in a plain text format.only the questions`
+      Just send the questions in a plain text format only the questions. Ask some short questions and the questions 
+      should like some generalized ones.`
     }
   });
 
