@@ -12,7 +12,7 @@ const ChatMessage = ({ message, isAi = false }: ChatMessageProps) => {
     <div
       className={cn(
         "flex gap-4 p-4 rounded-lg transition-all duration-200 hover:bg-white/50",
-        isAi ? "justify-start" : "justify-start" // Changed to always justify-start for consistent alignment
+        isAi ? "justify-start" : "justify-end" // Changed back to justify-end for user messages
       )}
     >
       <div className={cn("flex gap-4 max-w-[80%] w-auto p-4 rounded-lg", 
@@ -20,7 +20,7 @@ const ChatMessage = ({ message, isAi = false }: ChatMessageProps) => {
          "bg-gradient-to-br from-indigo-50/50 to-purple-50/50 backdrop-blur-sm border border-indigo-100")}>
         <div className={cn(
           "shrink-0 mt-1 p-2 h-fit rounded-full",
-          isAi ? "bg-primary text-white order-first" : "bg-secondary text-primary order-first" // Changed to always order-first
+          isAi ? "bg-primary text-white order-first" : "bg-secondary text-primary order-first"
         )}>
           {isAi ? (
             <DollarSign className="h-4 w-4" />

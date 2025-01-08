@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { useChatMessages } from "./useChatMessages";
 import { useChatHistory } from "./useChatHistory";
 
-
 export type PersonaType = {
   situation: string;
   goal: string;
@@ -37,7 +36,6 @@ export const useChat = (persona: PersonaType, userData: any) => {
         setMessages([]);
       }
 
-      // Invalidate the chat history to trigger a refresh
       await invalidateHistory();
       toast.success("Chat deleted successfully");
 
@@ -63,13 +61,17 @@ export const useChat = (persona: PersonaType, userData: any) => {
 
       setContext((prevContext) => [...prevContext, message]);
 
+      console.log("Sending user data to AI:", userData); // Debug log
+
       const { data, error } = await supabase.functions.invoke('chat', {
         body: {
           prompt: `
           Please consider the following persona and credit profile when answering the user's question:
-          Chat history : ${JSON.stringify(chatHistory)}
-          User's query : ${message}
-          So based on the chat history, you can give the best possible advice to the user.
+          Chat history: ${JSON.stringify(context)}
+          User's query: ${message}
+          User's credit profile: ${JSON.stringify(userData)}
+          Persona: ${JSON.stringify(persona)}
+          Based on this information, provide personalized financial advice.
           `,
           userData: userData,
           persona: persona
