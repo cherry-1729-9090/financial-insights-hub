@@ -44,7 +44,6 @@ export const fetchUserCreditProfile = async () => {
     const { data, error } = await supabase.functions.invoke('credit-profile', {
       body: { userId: payload }
     });
-    console.log('-----------data', data.data);
     if (error) {
       console.error("Error fetching credit profile:", error);
       return randomUserData;

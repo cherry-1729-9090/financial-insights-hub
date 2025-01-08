@@ -29,9 +29,7 @@ serve(async (req) => {
       body: JSON.stringify({ userId: encryptedToken })
     });
 
-    console.log('-----------response', response);
     const data = await response.json();
-    console.log('-----------data', data);
 
     return new Response(
       JSON.stringify(data),
