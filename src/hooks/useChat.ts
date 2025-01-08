@@ -21,16 +21,34 @@ export const useChat = (persona: PersonaType, userData: any) => {
   const [aiQuestions, setAiQuestions] = useState<string[]>([]);
   const [context, setContext] = useState<string[]>([]);
 
-  const mockCreditProfile = {
-    credit_score: "735",
-    total_loan_amt: "13936790",
-    total_hl_amt: "7772878",
-    total_pl_amt: "5462400",
-    all_loan: "66",
-    running_loan: "21",
-    credit_utilization: "85",
-    foir: "60",
-    employement_status: "Employed",
+  const handleDeleteChat = async (chatId: string) => {
+    try {
+      // Delete chat messages first
+      const { error: messagesError } = await supabase
+        .from('chat_messages')
+        .delete()
+        .eq('session_id', chatId);
+
+      if (messagesError) throw messagesError;
+
+      // Then delete the chat session
+      const { error: sessionError } = await supabase
+        .from('chat_sessions')
+        .delete()
+        .eq('id', chatId);
+
+      if (sessionError) throw sessionError;
+
+      // If the deleted chat was selected, clear the selection
+      if (selectedChat === chatId) {
+        setSelectedChat(null);
+        setMessages([]);
+      }
+
+    } catch (error) {
+      console.error("Error deleting chat:", error);
+      throw error;
+    }
   };
 
   const handleSendMessage = async (message: string) => {
@@ -80,7 +98,7 @@ export const useChat = (persona: PersonaType, userData: any) => {
 
   return {
     messages,
-    setMessages, // Now explicitly returning setMessages
+    setMessages,
     chatHistory,
     handleSendMessage,
     handleNewChat: () => {
@@ -90,5 +108,6 @@ export const useChat = (persona: PersonaType, userData: any) => {
     selectedChat,
     setSelectedChat,
     showSuggestions,
+    handleDeleteChat,
   };
 };

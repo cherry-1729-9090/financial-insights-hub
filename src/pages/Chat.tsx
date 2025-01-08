@@ -27,6 +27,7 @@ const Chat = ({ userData }: any) => {
     handleSendMessage,
     handleNewChat,
     setSelectedChat,
+    handleDeleteChat,
   } = useChat(persona, userData);
 
   const scrollToBottom = () => {
@@ -88,6 +89,7 @@ const Chat = ({ userData }: any) => {
           onSelectChat={setSelectedChat}
           selectedChat={selectedChat}
           onNewChat={handleNewChat}
+          onDeleteChat={handleDeleteChat}
           className={cn(
             "transition-all duration-300 ease-in-out",
             isSidebarCollapsed ? "-translate-x-full" : "translate-x-0"

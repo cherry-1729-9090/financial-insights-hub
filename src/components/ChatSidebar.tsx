@@ -1,7 +1,8 @@
-import { MessageSquare, Plus } from "lucide-react";
+import { MessageSquare, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 interface ChatHistory {
   id: string;
@@ -14,6 +15,7 @@ interface ChatSidebarProps {
   onSelectChat: (id: string) => void;
   selectedChat?: string | null;
   onNewChat?: () => void;
+  onDeleteChat?: (id: string) => void;
   className?: string;
 }
 
@@ -22,8 +24,22 @@ const ChatSidebar = ({
   onSelectChat, 
   selectedChat,
   onNewChat,
+  onDeleteChat,
   className 
 }: ChatSidebarProps) => {
+  const handleDelete = async (e: React.MouseEvent, chatId: string) => {
+    e.stopPropagation();
+    try {
+      if (onDeleteChat) {
+        await onDeleteChat(chatId);
+        toast.success("Chat deleted successfully");
+      }
+    } catch (error) {
+      console.error("Error deleting chat:", error);
+      toast.error("Failed to delete chat");
+    }
+  };
+
   return (
     <div className={cn(
       "w-80 sidebar-gradient border-r flex flex-col h-full shadow-lg",
@@ -66,6 +82,14 @@ const ChatSidebar = ({
                 </span>
               )}
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 absolute right-2"
+              onClick={(e) => handleDelete(e, chat.id)}
+            >
+              <Trash2 className="h-4 w-4 text-gray-500 hover:text-red-500" />
+            </Button>
           </Button>
         ))}
       </div>
