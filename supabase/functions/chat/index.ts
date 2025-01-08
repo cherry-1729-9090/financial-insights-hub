@@ -16,8 +16,11 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt } = await req.json();
+    const request = await req.json();
+    const {prompt, userData, persona} = request;
     console.log('Processing prompt:', prompt);
+    console.log('UserData : ', userData);
+    console.log('Persona : ', persona);
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -29,52 +32,51 @@ serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
-
+    const chatHistory = await supabase.from('chat_history').select('*').eq('user_id', userData.id);
     // Check for credit card related queries
     const isCreditCardQuery = prompt.toLowerCase().includes('credit card') || 
                             prompt.toLowerCase().includes('card recommendation') ||
                             prompt.toLowerCase().includes('card benefits');
-
     let creditCardInfo = '';
     
-    if (isCreditCardQuery) {
-      console.log('Credit card query detected, performing vector search...');
+    // if (isCreditCardQuery) {
+    //   console.log('Credit card query detected, performing vector search...');
       
-      try {
-        // Generate embedding for the query
-        const embedding = await generateEmbedding(prompt);
+    //   try {
+    //     // Generate embedding for the query
+    //     const embedding = await generateEmbedding(prompt);
         
-        // Perform vector search using existing embedding column
-        const cards = await performVectorSearch(supabase, embedding, prompt);
+    //     // Perform vector search using existing embedding column
+    //     const cards = await performVectorSearch(supabase, embedding, prompt);
 
-        if (cards && cards.length > 0) {
-          creditCardInfo = '\n\nBased on semantic search, here are the most relevant credit card recommendations:\n\n' +
-            cards.map(card => 
-              `${card.card_name} from ${card.bank_name}:\n` +
-              `- Annual fee: ${card.annual_fee}\n` +
-              `- Features: ${card.features}\n`
-            ).join('\n');
-        }
-      } catch (error) {
-        console.error('Error in vector search:', error);
-        // Fallback to regular search if vector search fails
-        const { data: cards, error: searchError } = await supabase
-          .from('credit_cards')
-          .select('*')
-          .limit(3);
+    //     if (cards && cards.length > 0) {
+    //       creditCardInfo = '\n\nBased on semantic search, here are the most relevant credit card recommendations:\n\n' +
+    //         cards.map(card => 
+    //           `${card.card_name} from ${card.bank_name}:\n` +
+    //           `- Annual fee: ${card.annual_fee}\n` +
+    //           `- Features: ${card.features}\n`
+    //         ).join('\n');
+    //     }
+    //   } catch (error) {
+    //     console.error('Error in vector search:', error);
+    //     // Fallback to regular search if vector search fails
+    //     const { data: cards, error: searchError } = await supabase
+    //       .from('credit_cards')
+    //       .select('*')
 
-        if (searchError) {
-          console.error('Error in fallback search:', searchError);
-        } else if (cards && cards.length > 0) {
-          creditCardInfo = '\n\nBased on your query, here are some credit card recommendations:\n\n' +
-            cards.map(card => 
-              `${card.card_name} from ${card.bank_name}:\n` +
-              `- Annual fee: ${card.annual_fee}\n` +
-              `- Features: ${card.features}\n`
-            ).join('\n');
-        }
-      }
-    }
+    //     if (searchError) {
+    //       console.error('Error in fallback search:', searchError);
+    //     } else if (cards && cards.length > 0) {
+    //       creditCardInfo = '\n\nBased on your query, here are some credit card recommendations:\n\n' +
+    //         cards.map(card => 
+    //           `${card.card_name} from ${card.bank_name}:\n` +
+    //           `- Annual fee: ${card.annual_fee}\n` +
+    //           `- Features: ${card.features}\n`
+    //         ).join('\n');
+    //     }
+    //   }
+    // }
+
 
     // Get OpenRouter API response
     const openRouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
@@ -93,23 +95,37 @@ serve(async (req) => {
         "X-Title": "Financial Advisor Chat"
       },
       body: JSON.stringify({
-        model: "mistralai/mistral-7b-instruct",
+        model: "anthropic/claude-3-sonnet",
         messages: [
           {
             role: "system",
-            content: isCreditCardQuery
-              ? `You are a helpful financial advisor specializing in credit cards.
-                Analyze the user's query and the provided credit card recommendations.
-                Provide clear, concise advice and explain which cards might be most suitable and why.
-                Based on the user's credit profile, and available credit cards, provide the best possible advice.
-                Never encourage vulgar, explicit, or inappropriate behavior.`
-              : `You are a helpful financial advisor.
+            content: 
+            // isCreditCardQuery
+            //   ? `You are a helpful financial advisor specializing in credit cards.
+            //     Analyze the user's query and the provided credit card recommendations.
+            //     Provide clear, concise advice and explain which cards might be most suitable and why.
+            //     Based on the user's credit profile, and available credit cards, provide the best possible advice.
+            //     User's credit profile : ${JSON.stringify(userData)}
+            //     User's persona : ${JSON.stringify(persona)}
+            //     Note : You are the best financial advisor in the world, and you are the best at giving advice to users based
+            //     on their credit profile and persona.
+            //     Never encourage vulgar, explicit, or inappropriate behavior.`
+            //   : 
+              `You are a helpful financial advisor.
                 Provide clear, concise advice based on best financial practices.
-                Never encourage vulgar, explicit, or inappropriate behavior.`
+                Never encourage vulgar, explicit, or inappropriate behavior.
+                User's credit profile : ${JSON.stringify(userData)}
+                User's persona : ${JSON.stringify(persona)}
+                Note : You are the best financial advisor in the world, and you are the best at giving advice to users based
+                on their credit profile and persona.
+                Chat history : ${JSON.stringify(chatHistory)}
+                So based on the chat history, you can give the best possible advice to the user.
+                `
           },
           {
             role: "user",
-            content: prompt + (creditCardInfo ? "\n\nAvailable credit cards:" + creditCardInfo : "")
+            content: prompt 
+            // + (creditCardInfo ? "\n\nAvailable credit cards:" + creditCardInfo : "")
           }
         ]
       })
@@ -122,7 +138,6 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log('OpenRouter response received');
 
     return new Response(
       JSON.stringify({ content: data.choices[0].message.content }),

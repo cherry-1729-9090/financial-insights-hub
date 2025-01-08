@@ -44,14 +44,13 @@ export const fetchUserCreditProfile = async () => {
     const { data, error } = await supabase.functions.invoke('credit-profile', {
       body: { userId: payload }
     });
-    console.log('-----------data', data);
-    console.log('-----------error', error);
+    console.log('-----------data', data.data);
     if (error) {
       console.error("Error fetching credit profile:", error);
       return randomUserData;
     }
     
-    return data || randomUserData;
+    return data.data || randomUserData;
   } catch(error) {
     console.error("Error fetching user credit profile:", error);
     return randomUserData;

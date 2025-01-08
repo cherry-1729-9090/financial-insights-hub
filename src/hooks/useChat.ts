@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { useChatMessages } from "./useChatMessages";
 import { useChatHistory } from "./useChatHistory";
 
-const DEMO_USER_ID = "123e4567-e89b-12d3-a456-426614174000";
 
 export type PersonaType = {
   situation: string;
@@ -17,7 +16,7 @@ export const useChat = (persona: PersonaType, userData: any) => {
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const { messages, setMessages, addMessage } = useChatMessages();
-  const { chatHistory, createChatSession, invalidateHistory } = useChatHistory(DEMO_USER_ID);
+  const { chatHistory, createChatSession, invalidateHistory } = useChatHistory(userData.id);
   const [aiQuestions, setAiQuestions] = useState<string[]>([]);
   const [context, setContext] = useState<string[]>([]);
 
@@ -33,7 +32,6 @@ export const useChat = (persona: PersonaType, userData: any) => {
         throw error;
       }
 
-      // If the deleted chat was selected, clear the selection
       if (selectedChat === chatId) {
         setSelectedChat(null);
         setMessages([]);
@@ -69,13 +67,11 @@ export const useChat = (persona: PersonaType, userData: any) => {
         body: {
           prompt: `
           Please consider the following persona and credit profile when answering the user's question:
-          Persona: ${persona?.situation}, 
-          Goal: ${persona?.goal}, Credit Profile: ${JSON.stringify(userData)}, 
-          Context: ${context.join(' ')}, User Question: ${message}
-          Most critical data points: ${persona?.criticalDataPoints.join(', ')}
-          Now considering all the above information, as you are the best financial advisor, answer the user's question. 
-          And also please consider this is the user's profile : ${JSON.stringify(userData)}          
-          `
+          Chat history : ${JSON.stringify(chatHistory)}
+          User's query : ${message}
+          So based on the chat history, you can give the best possible advice to the user.
+          `,
+
         }
       });
 
@@ -85,7 +81,7 @@ export const useChat = (persona: PersonaType, userData: any) => {
       addMessage({ text: aiResponse, isAi: true });
 
       await supabase.from('chat_messages').insert([
-        { session_id: sessionId, content: aiResponse, role: 'assistant', user_id: DEMO_USER_ID }
+        { session_id: sessionId, content: aiResponse, role: 'assistant', user_id: userData.id }
       ]);
 
       setContext((prevContext) => [...prevContext, aiResponse]);

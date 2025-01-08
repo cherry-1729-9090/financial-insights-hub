@@ -13,7 +13,7 @@ const determinePersona = (creditProfile) => {
   if (score >= 750 && score <= 800) return "Persona 4";
   if (score > 800) return "Persona 6";
   if (score > 800 && utilization > 80) return "Persona 9";
-  return "Persona 7";
+  return "Persona 3";
 };
 
 const personas = {
@@ -136,7 +136,11 @@ export const generateQuestions = async (creditProfile: any): Promise<{ questions
       And please donot use any other text or comments, just send the questions in a plain text format.
       Please donot add comments like "Here are four questions that could help a user with" or anything like that.
       Just send the questions in a plain text format only the questions. Ask some short questions and the questions 
-      should like some generalized ones.`
+      should like some generalized ones.
+      User's credit profile : ${JSON.stringify(creditProfile)}
+      Note : These questions are generated in a user's point of view to make the user know what kind of questions they 
+      can ask an AI bot so that the user can ask the questions to the AI bot and continue the conversation.
+      `
     }
   });
 
