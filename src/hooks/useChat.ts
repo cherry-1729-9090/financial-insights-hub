@@ -23,21 +23,27 @@ export const useChat = (persona: PersonaType, userData: any) => {
 
   const handleDeleteChat = async (chatId: string) => {
     try {
-      // Delete chat messages first
+      // First, delete all chat messages associated with this session
       const { error: messagesError } = await supabase
         .from('chat_messages')
         .delete()
         .eq('session_id', chatId);
 
-      if (messagesError) throw messagesError;
+      if (messagesError) {
+        console.error("Error deleting chat messages:", messagesError);
+        throw messagesError;
+      }
 
-      // Then delete the chat session
+      // After messages are deleted, delete the chat session
       const { error: sessionError } = await supabase
         .from('chat_sessions')
         .delete()
         .eq('id', chatId);
 
-      if (sessionError) throw sessionError;
+      if (sessionError) {
+        console.error("Error deleting chat session:", sessionError);
+        throw sessionError;
+      }
 
       // If the deleted chat was selected, clear the selection
       if (selectedChat === chatId) {
