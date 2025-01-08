@@ -12,8 +12,7 @@ Note: You are the best financial advisor in the world, and you are the best at g
 
 export const getChatResponse = async (prompt: string, userData: any, persona: any) => {
   try {
-    // Since we can't use edge functions anymore, we'll provide a direct response
-    // based on the user's financial profile
+    // Generate response based on user's financial profile
     const creditScore = parseInt(userData?.credit_score || '0');
     const foir = parseInt(userData?.foir || '0');
     const utilization = parseInt(userData?.credit_utilization || '0');

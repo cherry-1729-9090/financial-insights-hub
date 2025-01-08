@@ -66,12 +66,12 @@ export const useChat = (persona: PersonaType, userData: any) => {
       setContext((prevContext) => [...prevContext, message]);
 
       // Use a demo user ID if no authenticated user
-      const effectiveUserId = userData?.user_id 
+      const effectiveUserId = userData?.id || '0';
 
       // Save user message
       await saveChatMessage(sessionId, message, 'user', effectiveUserId);
 
-      // Get AI response using our new utility function
+      // Get AI response using our utility function
       const aiResponse = await getChatResponse(message, userData, persona);
 
       // Add AI response to UI
