@@ -1,10 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const useChatHistory = (userId: string | null) => {
+  const queryClient = useQueryClient();
+  const queryKey = ['chatHistory', userId];
+
   const { data: chatHistory = [] } = useQuery({
-    queryKey: ['chatHistory', userId],
+    queryKey,
     queryFn: async () => {
       console.log('Fetching chat history for user:', userId);
       if (!userId) return [];
@@ -31,6 +34,10 @@ export const useChatHistory = (userId: string | null) => {
     enabled: !!userId
   });
 
+  const invalidateHistory = async () => {
+    await queryClient.invalidateQueries({ queryKey });
+  };
+
   const createChatSession = async (message: string) => {
     console.log('Creating new chat session...');
     try {
@@ -49,6 +56,9 @@ export const useChatHistory = (userId: string | null) => {
         throw sessionError;
       }
       
+      // Invalidate the chat history to refresh the list
+      await invalidateHistory();
+      
       console.log('New chat session created:', session.id);
       return session.id;
     } catch (error) {
@@ -60,6 +70,7 @@ export const useChatHistory = (userId: string | null) => {
 
   return {
     chatHistory,
-    createChatSession
+    createChatSession,
+    invalidateHistory
   };
 };

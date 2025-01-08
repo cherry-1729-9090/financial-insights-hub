@@ -17,7 +17,7 @@ export const useChat = (persona: PersonaType, userData: any) => {
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const { messages, setMessages, addMessage } = useChatMessages();
-  const { chatHistory, createChatSession } = useChatHistory(DEMO_USER_ID);
+  const { chatHistory, createChatSession, invalidateHistory } = useChatHistory(DEMO_USER_ID);
   const [aiQuestions, setAiQuestions] = useState<string[]>([]);
   const [context, setContext] = useState<string[]>([]);
 
@@ -39,6 +39,8 @@ export const useChat = (persona: PersonaType, userData: any) => {
         setMessages([]);
       }
 
+      // Invalidate the chat history to trigger a refresh
+      await invalidateHistory();
       toast.success("Chat deleted successfully");
 
     } catch (error) {
