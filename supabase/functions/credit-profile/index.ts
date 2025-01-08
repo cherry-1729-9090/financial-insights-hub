@@ -13,7 +13,7 @@ serve(async (req) => {
 
   try {
     const { userId } = await req.json();
-    
+    console.log('-----------userId', userId);
     // Base64 encode the userId to simulate Laravel's encryption
     const encodedToken = btoa(userId);
     
@@ -22,13 +22,14 @@ serve(async (req) => {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'token': encodedToken // Send token instead of userId
+        'token': encodedToken, // Send token instead of userId
+        'userId': userId
       },
       body: JSON.stringify({ token: encodedToken }) // Include token in body as well
     });
-
+    console.log('-----------response', response);
     const data = await response.json();
-
+    console.log('-----------data', data);
     return new Response(
       JSON.stringify(data),
       {

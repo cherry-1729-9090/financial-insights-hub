@@ -22,10 +22,12 @@ export const extractUserData = () => {
   try {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
-    if(!token) return '';
-    return token;
-  }
-  catch(error) {
+    if (!token) return '';
+    console.log('-----------token', token);
+    // Decode the token (assuming it's base64 encoded)
+    const decodedToken = atob(token);
+    return decodedToken;
+  } catch (error) {
     console.error("Error extracting user data:", error);
     return '';
   }
@@ -42,7 +44,8 @@ export const fetchUserCreditProfile = async () => {
     const { data, error } = await supabase.functions.invoke('credit-profile', {
       body: { userId: payload }
     });
-    
+    console.log('-----------data', data);
+    console.log('-----------error', error);
     if (error) {
       console.error("Error fetching credit profile:", error);
       return randomUserData;
