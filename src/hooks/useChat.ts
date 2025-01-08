@@ -13,7 +13,7 @@ export type PersonaType = {
   prompt?: string;  
 };
 
-export const useChat = (persona: PersonaType) => {
+export const useChat = (persona: PersonaType, userData: any) => {
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const { messages, setMessages, addMessage } = useChatMessages();
@@ -53,10 +53,11 @@ export const useChat = (persona: PersonaType) => {
           prompt: `
           Please consider the following persona and credit profile when answering the user's question:
           Persona: ${persona?.situation}, 
-          Goal: ${persona?.goal}, Credit Profile: ${JSON.stringify(mockCreditProfile)}, 
+          Goal: ${persona?.goal}, Credit Profile: ${JSON.stringify(userData)}, 
           Context: ${context.join(' ')}, User Question: ${message}
           Most critical data points: ${persona?.criticalDataPoints.join(', ')}
-          Now considering all the above information, as you are the best financial advisor, answer the user's question.          
+          Now considering all the above information, as you are the best financial advisor, answer the user's question. 
+          And also please consider this is the user's profile : ${JSON.stringify(userData)}          
           `
         }
       });

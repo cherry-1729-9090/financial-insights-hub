@@ -27,7 +27,7 @@ const Chat = ({ userData }: any) => {
     handleSendMessage,
     handleNewChat,
     setSelectedChat,
-  } = useChat(persona);
+  } = useChat(persona, userData);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

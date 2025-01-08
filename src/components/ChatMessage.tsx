@@ -1,5 +1,5 @@
 import { MessageCircle, Bot, DollarSign } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+import Markdown from "react-markdown";
 import { cn } from "@/lib/utils";
 
 interface ChatMessageProps {
@@ -33,7 +33,7 @@ const ChatMessage = ({ message, isAi = false }: ChatMessageProps) => {
             {isAi ? "AI Financial Advisor" : "You"}
           </p>
           <div className="prose prose-sm max-w-none w-full break-words whitespace-pre-wrap prose-p:leading-relaxed prose-p:my-1 prose-headings:mb-2 prose-headings:mt-4 first:prose-headings:mt-0 prose-li:my-0.5 prose-ul:my-2 prose-a:text-primary hover:prose-a:text-primary/80">
-            <ReactMarkdown>{message}</ReactMarkdown>
+            <Markdown>{message}</Markdown>
           </div>
         </div>
       </div>
