@@ -64,9 +64,30 @@ export const useChat = (persona: PersonaType, userData: any) => {
       // Update context
       setContext((prevContext) => [...prevContext, message]);
 
-      console.log("Sending user data to AI:", userData);
-      console.log("Session ID:", sessionId);
-      console.log("User ID:", userData?.id);
+      // Use a demo user ID if no authenticated user
+      const effectiveUserId = userData?.id || '123e4567-e89b-12d3-a456-426614174000';
+
+      console.log("Sending message with:", {
+        sessionId,
+        userId: effectiveUserId,
+        message
+      });
+
+      // Save user message
+      const { error: userMessageError } = await supabase
+        .from('chat_messages')
+        .insert({
+          session_id: sessionId,
+          content: message,
+          role: 'user',
+          user_id: effectiveUserId
+        });
+
+      if (userMessageError) {
+        console.error("Error saving user message:", userMessageError);
+        toast.error("Failed to save message");
+        throw userMessageError;
+      }
 
       // Get AI response
       const { data: aiData, error: aiError } = await supabase.functions.invoke('chat', {
@@ -90,31 +111,20 @@ export const useChat = (persona: PersonaType, userData: any) => {
       // Add AI response to UI
       addMessage({ text: aiResponse, isAi: true });
 
-      // Use a demo user ID if no authenticated user
-      const effectiveUserId = userData?.id || '123e4567-e89b-12d3-a456-426614174000';
-
-      // Save both messages to database
-      const { error: insertError } = await supabase
+      // Save AI response
+      const { error: aiMessageError } = await supabase
         .from('chat_messages')
-        .insert([
-          { 
-            session_id: sessionId, 
-            content: message, 
-            role: 'user', 
-            user_id: effectiveUserId
-          },
-          { 
-            session_id: sessionId, 
-            content: aiResponse, 
-            role: 'assistant', 
-            user_id: effectiveUserId
-          }
-        ]);
+        .insert({
+          session_id: sessionId,
+          content: aiResponse,
+          role: 'assistant',
+          user_id: effectiveUserId
+        });
 
-      if (insertError) {
-        console.error("Error saving messages:", insertError);
-        toast.error("Failed to save messages");
-        throw insertError;
+      if (aiMessageError) {
+        console.error("Error saving AI message:", aiMessageError);
+        toast.error("Failed to save AI response");
+        throw aiMessageError;
       }
 
       // Update context with AI response
