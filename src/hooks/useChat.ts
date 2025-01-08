@@ -23,13 +23,12 @@ export const useChat = (persona: PersonaType, userData: any) => {
 
   const handleDeleteChat = async (chatId: string) => {
     try {
-      // Start a transaction to ensure both deletes succeed or fail together
       const { data, error } = await supabase.rpc('delete_chat_cascade', {
         chat_session_id: chatId
-      }).single();
+      });
 
       if (error) {
-        console.error("Error in delete transaction:", error);
+        console.error("Error deleting chat:", error);
         toast.error("Failed to delete chat");
         throw error;
       }

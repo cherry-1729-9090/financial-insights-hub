@@ -143,6 +143,12 @@ export type Database = {
             }
             Returns: unknown
           }
+      delete_chat_cascade: {
+        Args: {
+          chat_session_id: string
+        }
+        Returns: undefined
+      }
       halfvec_avg: {
         Args: {
           "": number[]
