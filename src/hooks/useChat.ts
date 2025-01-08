@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useChatMessages } from "./useChatMessages";
 import { useChatHistory } from "./useChatHistory";
+import { getChatResponse, saveChatMessage } from "@/lib/chatUtils";
 
 export type PersonaType = {
   situation: string;
@@ -12,7 +13,6 @@ export type PersonaType = {
 };
 
 export const useChat = (persona: PersonaType, userData: any) => {
-  console.log('-----------userData', userData);
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const { messages, setMessages, addMessage } = useChatMessages();
@@ -68,78 +68,17 @@ export const useChat = (persona: PersonaType, userData: any) => {
       // Use a demo user ID if no authenticated user
       const effectiveUserId = userData?.user_id 
 
-      console.log("Sending message with:", {
-        sessionId,
-        userId: effectiveUserId,
-        message
-      });
-
       // Save user message
-      const { error: userMessageError } = await supabase
-        .from('chat_messages')
-        .insert({
-          session_id: sessionId,
-          content: message,
-          role: 'user',
-          user_id: effectiveUserId
-        });
+      await saveChatMessage(sessionId, message, 'user', effectiveUserId);
 
-      if (userMessageError) {
-        console.error("Error saving user message:", userMessageError);
-        toast.error("Failed to save message");
-        throw userMessageError;
-      }
-
-      // Get AI response
-      const { data: aiData, error: aiError } = await supabase.functions.invoke('chat', {
-        body: {
-          prompt: `
-          Please consider the following persona and credit profile when answering the user's question:
-          Chat history: ${JSON.stringify(context)}
-          User's query: ${message}
-          User's credit profile: ${JSON.stringify(userData)}
-          Persona: ${JSON.stringify(persona)}
-          Based on this information, provide personalized financial advice.
-          `,
-          userData: userData,
-          persona: persona
-        }
-      });
-
-      if (aiError) {
-        console.error("AI Error:", aiError);
-        // Handle the error but still show the fallback response if it exists
-        if (aiData?.content) {
-          addMessage({ text: aiData.content, isAi: true });
-        } else {
-          addMessage({ 
-            text: "I apologize, but I'm having trouble processing your request. Please try again or rephrase your question.", 
-            isAi: true 
-          });
-        }
-        return;
-      }
-
-      const aiResponse = aiData?.content || "Unable to provide a response at the moment.";
+      // Get AI response using our new utility function
+      const aiResponse = await getChatResponse(message, userData, persona);
 
       // Add AI response to UI
       addMessage({ text: aiResponse, isAi: true });
 
       // Save AI response
-      const { error: aiMessageError } = await supabase
-        .from('chat_messages')
-        .insert({
-          session_id: sessionId,
-          content: aiResponse,
-          role: 'assistant',
-          user_id: effectiveUserId
-        });
-
-      if (aiMessageError) {
-        console.error("Error saving AI message:", aiMessageError);
-        toast.error("Failed to save AI response");
-        throw aiMessageError;
-      }
+      await saveChatMessage(sessionId, aiResponse, 'assistant', effectiveUserId);
 
       // Update context with AI response
       setContext((prevContext) => [...prevContext, aiResponse]);
