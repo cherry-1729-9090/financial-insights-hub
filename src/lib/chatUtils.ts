@@ -49,15 +49,21 @@ export const getChatResponse = async (prompt: string, userData: any, persona: an
   }
 };
 
-export const saveChatMessage = async (sessionId: string, content: string, role: 'user' | 'assistant', userId: string) => {
+export const saveChatMessage = async (sessionId: string, content: string, role: 'user' | 'assistant', userId: string | number) => {
   try {
+    // Convert userId to number if it's a string
+    const numericUserId = typeof userId === 'string' ? parseInt(userId) : userId;
+    
+    // If conversion results in NaN, use 0 as a fallback
+    const effectiveUserId = isNaN(numericUserId) ? 0 : numericUserId;
+
     const { error } = await supabase
       .from('chat_messages')
       .insert({
         session_id: sessionId,
         content,
         role,
-        user_id: userId
+        user_id: effectiveUserId
       });
 
     if (error) {
