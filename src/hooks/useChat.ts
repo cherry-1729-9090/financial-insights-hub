@@ -23,26 +23,15 @@ export const useChat = (persona: PersonaType, userData: any) => {
 
   const handleDeleteChat = async (chatId: string) => {
     try {
-      // First, delete all chat messages associated with this session
-      const { error: messagesError } = await supabase
-        .from('chat_messages')
-        .delete()
-        .eq('session_id', chatId);
+      // Start a transaction to ensure both deletes succeed or fail together
+      const { data, error } = await supabase.rpc('delete_chat_cascade', {
+        chat_session_id: chatId
+      }).single();
 
-      if (messagesError) {
-        console.error("Error deleting chat messages:", messagesError);
-        throw messagesError;
-      }
-
-      // After messages are deleted, delete the chat session
-      const { error: sessionError } = await supabase
-        .from('chat_sessions')
-        .delete()
-        .eq('id', chatId);
-
-      if (sessionError) {
-        console.error("Error deleting chat session:", sessionError);
-        throw sessionError;
+      if (error) {
+        console.error("Error in delete transaction:", error);
+        toast.error("Failed to delete chat");
+        throw error;
       }
 
       // If the deleted chat was selected, clear the selection
@@ -51,8 +40,11 @@ export const useChat = (persona: PersonaType, userData: any) => {
         setMessages([]);
       }
 
+      toast.success("Chat deleted successfully");
+
     } catch (error) {
       console.error("Error deleting chat:", error);
+      toast.error("Failed to delete chat");
       throw error;
     }
   };
