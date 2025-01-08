@@ -66,7 +66,7 @@ export const useChat = (persona: PersonaType, userData: any) => {
       setContext((prevContext) => [...prevContext, message]);
 
       // Use a demo user ID if no authenticated user
-      const effectiveUserId = userData?.id || '123e4567-e89b-12d3-a456-426614174000';
+      const effectiveUserId = userData?.user_id 
 
       console.log("Sending message with:", {
         sessionId,
