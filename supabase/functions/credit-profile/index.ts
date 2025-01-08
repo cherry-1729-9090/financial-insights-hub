@@ -14,22 +14,25 @@ serve(async (req) => {
   try {
     const { userId } = await req.json();
     console.log('-----------userId', userId);
-    // Base64 encode the userId to simulate Laravel's encryption
-    const encodedToken = btoa(userId);
+    
+    // Use the encrypted token format from Postman
+    const encryptedToken = "eyJpdiI6IlFCQkVGMmFHajRyWDBVUVRqM0ZQV1E9PSIsInZhbHVlIjoiZzhRME5zSWVpUDRjRXo0M1MxNE5zQT09IiwibWFjIjoiODcyZjU3ZDY0ZDc2OGQ1NDgxMzJjNjk2MjE4ZjhjZDkwNDFkN2Y5YjVjMGEzNzdiZjAzN2ZmYzk3ODRjY2IwMiIsInRhZyI6IiJ9";
     
     const response = await fetch("https://app.minemi.ai/api/v1/credit-profile-insights", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'token': encodedToken, // Send token instead of userId
-        'userId': userId
+        'userId': encryptedToken,
+        'User-Agent': 'Supabase Edge Function'
       },
-      body: JSON.stringify({ token: encodedToken }) // Include token in body as well
+      body: JSON.stringify({ userId: encryptedToken })
     });
+
     console.log('-----------response', response);
     const data = await response.json();
     console.log('-----------data', data);
+
     return new Response(
       JSON.stringify(data),
       {
