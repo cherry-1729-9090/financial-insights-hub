@@ -15,7 +15,7 @@ export const useChat = (persona: PersonaType, userData: any) => {
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const { messages, setMessages, addMessage } = useChatMessages();
-  const { chatHistory, createChatSession, invalidateHistory } = useChatHistory(userData.id);
+  const { chatHistory, createChatSession, invalidateHistory } = useChatHistory(userData?.id);
   const [aiQuestions, setAiQuestions] = useState<string[]>([]);
   const [context, setContext] = useState<string[]>([]);
 
@@ -66,10 +66,10 @@ export const useChat = (persona: PersonaType, userData: any) => {
 
       console.log("Sending user data to AI:", userData);
       console.log("Session ID:", sessionId);
-      console.log("User ID:", userData.id);
+      console.log("User ID:", userData?.id);
 
       // Get AI response
-      const { data, error } = await supabase.functions.invoke('chat', {
+      const { data: aiData, error: aiError } = await supabase.functions.invoke('chat', {
         body: {
           prompt: `
           Please consider the following persona and credit profile when answering the user's question:
@@ -84,11 +84,14 @@ export const useChat = (persona: PersonaType, userData: any) => {
         }
       });
 
-      if (error) throw error;
-      const aiResponse = data?.content || "Unable to provide a response at the moment.";
+      if (aiError) throw aiError;
+      const aiResponse = aiData?.content || "Unable to provide a response at the moment.";
 
       // Add AI response to UI
       addMessage({ text: aiResponse, isAi: true });
+
+      // Use a demo user ID if no authenticated user
+      const effectiveUserId = userData?.id || '123e4567-e89b-12d3-a456-426614174000';
 
       // Save both messages to database
       const { error: insertError } = await supabase
@@ -98,13 +101,13 @@ export const useChat = (persona: PersonaType, userData: any) => {
             session_id: sessionId, 
             content: message, 
             role: 'user', 
-            user_id: userData.id 
+            user_id: effectiveUserId
           },
           { 
             session_id: sessionId, 
             content: aiResponse, 
             role: 'assistant', 
-            user_id: userData.id 
+            user_id: effectiveUserId
           }
         ]);
 
