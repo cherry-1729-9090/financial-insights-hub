@@ -12,9 +12,13 @@ serve(async (req) => {
   }
 
   try {
+    const { userId } = await req.json();
+    
     const response = await fetch("https://app.minemi.ai/api/v1/credit-profile-insights", {
+      method: 'POST',
       headers: {
-        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'userId': userId || ''
       }
     });
     

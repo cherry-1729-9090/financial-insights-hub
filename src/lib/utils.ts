@@ -1,7 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import jwt from "jsonwebtoken"
-import { JwtPayload } from 'jsonwebtoken';
+import { supabase } from "@/integrations/supabase/client"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -40,15 +39,16 @@ export const fetchUserCreditProfile = async () => {
       return randomUserData;
     }
     
-    const userData = await fetch('https://app.minemi.ai/api/v1/credit-profile-insights', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'userId': payload
-      }
+    const { data, error } = await supabase.functions.invoke('credit-profile', {
+      body: { userId: payload }
     });
     
-    return await userData.json();
+    if (error) {
+      console.error("Error fetching credit profile:", error);
+      return randomUserData;
+    }
+    
+    return data || randomUserData;
   } catch(error) {
     console.error("Error fetching user credit profile:", error);
     return randomUserData;
