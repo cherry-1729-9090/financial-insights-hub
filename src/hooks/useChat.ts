@@ -71,7 +71,8 @@ export const useChat = (persona: PersonaType, userData: any) => {
           User's query : ${message}
           So based on the chat history, you can give the best possible advice to the user.
           `,
-
+          userData: userData,
+          persona: persona
         }
       });
 
@@ -81,6 +82,7 @@ export const useChat = (persona: PersonaType, userData: any) => {
       addMessage({ text: aiResponse, isAi: true });
 
       await supabase.from('chat_messages').insert([
+        { session_id: sessionId, content: message, role: 'user', user_id: userData.id },
         { session_id: sessionId, content: aiResponse, role: 'assistant', user_id: userData.id }
       ]);
 
