@@ -49,20 +49,26 @@ export const useChat = (persona: PersonaType, userData: any) => {
   const handleSendMessage = async (message: string) => {
     if (!message.trim()) return;
 
-    addMessage({ text: message, isAi: false });
-    setShowSuggestions(false);
-
     try {
+      // Add user message to UI immediately
+      addMessage({ text: message, isAi: false });
+      setShowSuggestions(false);
+
+      // Create new chat session if needed
       let sessionId = selectedChat;
       if (!sessionId) {
         sessionId = await createChatSession(message);
         setSelectedChat(sessionId);
       }
 
+      // Update context
       setContext((prevContext) => [...prevContext, message]);
 
-      console.log("Sending user data to AI:", userData); // Debug log
+      console.log("Sending user data to AI:", userData);
+      console.log("Session ID:", sessionId);
+      console.log("User ID:", userData.id);
 
+      // Get AI response
       const { data, error } = await supabase.functions.invoke('chat', {
         body: {
           prompt: `
@@ -81,17 +87,39 @@ export const useChat = (persona: PersonaType, userData: any) => {
       if (error) throw error;
       const aiResponse = data?.content || "Unable to provide a response at the moment.";
 
+      // Add AI response to UI
       addMessage({ text: aiResponse, isAi: true });
 
-      await supabase.from('chat_messages').insert([
-        { session_id: sessionId, content: message, role: 'user', user_id: userData.id },
-        { session_id: sessionId, content: aiResponse, role: 'assistant', user_id: userData.id }
-      ]);
+      // Save both messages to database
+      const { error: insertError } = await supabase
+        .from('chat_messages')
+        .insert([
+          { 
+            session_id: sessionId, 
+            content: message, 
+            role: 'user', 
+            user_id: userData.id 
+          },
+          { 
+            session_id: sessionId, 
+            content: aiResponse, 
+            role: 'assistant', 
+            user_id: userData.id 
+          }
+        ]);
 
+      if (insertError) {
+        console.error("Error saving messages:", insertError);
+        toast.error("Failed to save messages");
+        throw insertError;
+      }
+
+      // Update context with AI response
       setContext((prevContext) => [...prevContext, aiResponse]);
+      
     } catch (error) {
-      toast.error("An error occurred. Please try again.");
       console.error("Error handling message:", error);
+      toast.error("An error occurred. Please try again.");
     }
   };
 
