@@ -106,7 +106,20 @@ export const useChat = (persona: PersonaType, userData: any) => {
         }
       });
 
-      if (aiError) throw aiError;
+      if (aiError) {
+        console.error("AI Error:", aiError);
+        // Handle the error but still show the fallback response if it exists
+        if (aiData?.content) {
+          addMessage({ text: aiData.content, isAi: true });
+        } else {
+          addMessage({ 
+            text: "I apologize, but I'm having trouble processing your request. Please try again or rephrase your question.", 
+            isAi: true 
+          });
+        }
+        return;
+      }
+
       const aiResponse = aiData?.content || "Unable to provide a response at the moment.";
 
       // Add AI response to UI
@@ -134,6 +147,12 @@ export const useChat = (persona: PersonaType, userData: any) => {
     } catch (error) {
       console.error("Error handling message:", error);
       toast.error("An error occurred. Please try again.");
+      
+      // Add a fallback message to the UI even if there's an error
+      addMessage({ 
+        text: "I apologize, but I'm having trouble processing your request. Please try again or rephrase your question.", 
+        isAi: true 
+      });
     }
   };
 
