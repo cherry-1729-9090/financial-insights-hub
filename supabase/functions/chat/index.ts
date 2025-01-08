@@ -38,6 +38,7 @@ serve(async (req) => {
     console.error('Error in chat function:', error);
     return new Response(
       JSON.stringify({ 
+        content: "I apologize, but I'm having trouble processing your request. Please try again or rephrase your question.",
         error: error.message,
         details: error.stack 
       }),
