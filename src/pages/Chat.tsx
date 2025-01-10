@@ -79,7 +79,7 @@ const Chat = ({ userData }: any) => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden relative">
+    <div className="flex h-screen overflow-hidden relative bg-gradient-to-br from-blue-50 to-indigo-50">
       {/* Overlay for mobile when sidebar is open */}
       {!isSidebarCollapsed && (
         <div 
@@ -91,13 +91,12 @@ const Chat = ({ userData }: any) => {
       {/* Sidebar */}
       <div className={cn(
         "fixed lg:relative lg:flex h-full z-30 transition-all duration-300 ease-in-out",
-        isSidebarCollapsed ? "-translate-x-full lg:translate-x-0 lg:w-80" : "translate-x-0 w-80"
+        isSidebarCollapsed ? "-translate-x-full lg:translate-x-0 lg:w-80" : "translate-x-0 w-72 sm:w-80"
       )}>
         <ChatSidebar
           history={chatHistory}
           onSelectChat={(id) => {
             setSelectedChat(id);
-            // Close sidebar on mobile after selection
             if (window.innerWidth < 1024) {
               setIsSidebarCollapsed(true);
             }
@@ -105,14 +104,14 @@ const Chat = ({ userData }: any) => {
           selectedChat={selectedChat}
           onNewChat={handleNewChat}
           onDeleteChat={handleDeleteChat}
-          className="h-full"
+          className="h-full shadow-lg"
         />
       </div>
       
-      {/* Toggle button - Repositioned to left middle */}
+      {/* Toggle button */}
       <button
         onClick={toggleSidebar}
-        className="fixed top-1/2 -translate-y-1/2 left-4 z-40 p-2 rounded-full bg-white/80 hover:bg-white shadow-md transition-all duration-200 hover:scale-105 lg:hidden"
+        className="fixed top-1/2 -translate-y-1/2 left-2 z-40 p-2 rounded-full bg-white/80 hover:bg-white shadow-md transition-all duration-200 hover:scale-105 lg:hidden"
       >
         <ChevronLeft className={cn(
           "h-4 w-4 text-primary transition-transform duration-300",
@@ -121,19 +120,19 @@ const Chat = ({ userData }: any) => {
       </button>
       
       {/* Main chat area */}
-      <div className="flex-1 flex flex-col glass-effect shadow-lg overflow-hidden">
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
         <ChatHeader userData={userData} />
 
-        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-4">
           <Card className="min-h-full bg-white/50 backdrop-blur-sm border-none shadow-sm">
-            <div className="p-4 space-y-4">
+            <div className="p-2 sm:p-4 space-y-2 sm:space-y-4">
               {showSuggestions && messages.length === 0 ? (
                 <div className="space-y-4">
-                  <div className="p-6 rounded-lg bg-gradient-to-br from-blue-50/80 to-indigo-50/80 backdrop-blur-sm border border-blue-100">
-                    <div className="flex items-center gap-3 mb-4">
+                  <div className="p-4 sm:p-6 rounded-lg bg-gradient-to-br from-blue-50/80 to-indigo-50/80 backdrop-blur-sm border border-blue-100">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-4">
                       <div className="p-2 bg-primary rounded-full">
                         <svg
-                          className="w-6 h-6 text-white"
+                          className="w-5 h-5 sm:w-6 sm:h-6 text-white"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -146,24 +145,24 @@ const Chat = ({ userData }: any) => {
                           />
                         </svg>
                       </div>
-                      <h2 className="text-2xl font-semibold text-primary">
+                      <h2 className="text-base sm:text-2xl font-semibold text-primary">
                         Your Personal Financial AI Advisor
                       </h2>
                     </div>
-                    <div className="space-y-4">
-                      <p className="text-lg text-gray-700 leading-relaxed">
+                    <div className="space-y-3 sm:space-y-4">
+                      <p className="text-sm sm:text-lg text-gray-700 leading-relaxed">
                         👋 Hey {userData?.name || 'there'}, Welcome to Minemi AI!
                       </p>
-                      <p className="text-gray-600">
+                      <p className="text-xs sm:text-base text-gray-600">
                         ✨ We see your credit score is <span className="font-semibold">{userData?.credit_score}</span> and 
                         you have <span className="font-semibold">{userData?.running_loan} active loans</span>.
                       </p>
-                      <p className="text-gray-600">
+                      <p className="text-xs sm:text-base text-gray-600">
                         Let's explore ways to reduce EMIs, boost your score, or find top-up options.
                       </p>
                     </div>
-                    <div className="mt-6">
-                      <p className="text-sm text-gray-500 mb-4 font-medium">
+                    <div className="mt-4 sm:mt-6">
+                      <p className="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4 font-medium">
                         Let's start with some personalized questions based on your profile:
                       </p>
                       <SuggestedQuestions
@@ -174,7 +173,7 @@ const Chat = ({ userData }: any) => {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-2 sm:space-y-4">
                   {messages.map((msg, idx) => (
                     <ChatMessage key={idx} message={msg.text} isAi={msg.isAi} />
                   ))}
@@ -185,13 +184,11 @@ const Chat = ({ userData }: any) => {
           </Card>
         </div>
 
-        <div className="p-4">
-          <ChatInput
-            inputMessage={inputMessage}
-            setInputMessage={setInputMessage}
-            handleSendMessage={handleSendMessage}
-          />
-        </div>
+        <ChatInput
+          inputMessage={inputMessage}
+          setInputMessage={setInputMessage}
+          handleSendMessage={handleSendMessage}
+        />
       </div>
     </div>
   );
