@@ -19,7 +19,7 @@ export const useChat = (persona: PersonaType, userData: any) => {
   const { chatHistory, createChatSession, invalidateHistory } = useChatHistory(userData?.id);
   const [aiQuestions, setAiQuestions] = useState<string[]>([]);
   const [context, setContext] = useState<string[]>([]);
-
+  console.log('------------------chatHistory', chatHistory)
   const handleDeleteChat = async (chatId: string) => {
     try {
       const { data, error } = await supabase.rpc('delete_chat_cascade', {

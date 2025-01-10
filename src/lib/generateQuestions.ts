@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-
+import { chatCompletion } from "@/functions/chatCompletion";
 const determinePersona = (creditProfile) => {
   const { credit_score, foir, credit_utilization } = creditProfile;
   const score = parseInt(credit_score, 10);
@@ -92,7 +92,9 @@ const personas = {
 };
 
 const formatAIResponse = (response) => {
-  console.log('response', response?.content);
+  response = response.replace(/```json\n/, '').replace(/\n```/, '').split(',');
+  console.log('response', response);
+  return response
   try {
     const isMarkdown = response?.content.includes('```markdown');
 
@@ -126,11 +128,10 @@ type PersonaType = {
 
 export const generateQuestions = async (creditProfile: any): Promise<{ questions: string[]; persona: PersonaType }> => {
   const personaId = determinePersona(creditProfile);
+  creditProfile = {...creditProfile, loanList: creditProfile.loanList.slice(0,5)}
+  console.log('-----creditProfile', creditProfile)
   const persona = personas[personaId];
-
-  const { data, error } = await supabase.functions.invoke('chat', {
-    body: {
-      prompt: `Generate 4 questions for ${persona.situation} based on the credit profile ${JSON.stringify(creditProfile)} 
+  const message = `Generate 4 questions for ${persona.situation} based on the credit profile ${JSON.stringify(creditProfile)} 
       and considering common user concerns. Please provide questions in the form of an array. 
       Please donot use any markdown or code blocks, just send the questions in a plain text format.
       And please donot use any other text or comments, just send the questions in a plain text format.
@@ -139,15 +140,12 @@ export const generateQuestions = async (creditProfile: any): Promise<{ questions
       should like some generalized ones.
       User's credit profile : ${JSON.stringify(creditProfile)}
       Note : These questions are generated in a user's point of view to make the user know what kind of questions they 
-      can ask an AI bot so that the user can ask the questions to the AI bot and continue the conversation.
+      can ask an AI bot so that the user can ask the questions to the AI bot and continue the conversation Ask the questions in the form of a JSON array.
       `
-    }
-  });
+  const response = await chatCompletion(message, creditProfile, persona, true);
 
-  if (error) {
-    console.error("Error generating questions:", error);
-    return { questions: ["Failed to fetch AI-generated questions."], persona };
-  }
+  console.log('-------------------response data in generateQuestions', response);
+ 
 
-  return { questions: formatAIResponse(data), persona };
+  return { questions: formatAIResponse(response), persona };
 };

@@ -12,7 +12,7 @@ const ChatMessage = ({ message, isAi = false }: ChatMessageProps) => {
     <div
       className={cn(
         "flex gap-4 p-4 rounded-lg transition-all duration-200 hover:bg-white/50",
-        isAi ? "justify-start" : "justify-end" // Changed back to justify-end for user messages
+        isAi ? "justify-start" : "justify-end" 
       )}
     >
       <div className={cn("flex gap-4 max-w-[80%] w-auto p-4 rounded-lg", 
@@ -33,7 +33,7 @@ const ChatMessage = ({ message, isAi = false }: ChatMessageProps) => {
             {isAi ? "AI Financial Advisor" : "You"}
           </p>
           <div className="prose prose-sm max-w-none w-full break-words whitespace-pre-wrap [&>p]:leading-normal [&>p]:my-0.5 [&>h1]:mb-1 [&>h1]:mt-2 [&>h2]:mb-1 [&>h2]:mt-2 [&>h3]:mb-1 [&>h3]:mt-2 [&>ul]:my-1 [&>li]:my-0.5 [&>a]:text-primary hover:[&>a]:text-primary/80">
-            <Markdown>{message}</Markdown>
+            {message}
           </div>
         </div>
       </div>

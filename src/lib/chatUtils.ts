@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { PersonaType } from "@/hooks/useChat";
-
+import { chatCompletion } from "@/functions/chatCompletion";
 export const saveChatMessage = async (
   sessionId: string,
   content: string,
@@ -31,20 +31,14 @@ export const getChatResponse = async (
   message: string,
   userData: any,
   persona: PersonaType
-): Promise<string> => {
+): Promise<string> => { 
   try {
-    const { data, error } = await supabase.functions.invoke('chat-completion', {
-      body: { message, userData, persona }
-    });
-
-    if (error) {
-      console.error("Error getting chat response:", error);
-      throw error;
-    }
-
-    return data.response;
+    const response = await chatCompletion(message, userData, persona);
+    return response;
   } catch (error) {
     console.error("Error in getChatResponse:", error);
     throw error;
   }
 };
+
+
