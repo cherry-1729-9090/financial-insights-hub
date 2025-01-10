@@ -109,10 +109,10 @@ const Chat = ({ userData }: any) => {
         />
       </div>
       
-      {/* Toggle button */}
+      {/* Toggle button - Repositioned to left middle */}
       <button
         onClick={toggleSidebar}
-        className="fixed top-4 left-4 z-40 p-2 rounded-full bg-white/80 hover:bg-white shadow-md transition-all duration-200 hover:scale-105 lg:hidden"
+        className="fixed top-1/2 -translate-y-1/2 left-4 z-40 p-2 rounded-full bg-white/80 hover:bg-white shadow-md transition-all duration-200 hover:scale-105 lg:hidden"
       >
         <ChevronLeft className={cn(
           "h-4 w-4 text-primary transition-transform duration-300",
