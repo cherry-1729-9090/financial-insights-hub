@@ -17,7 +17,7 @@ const ChatInput = ({ inputMessage, setInputMessage, handleSendMessage }: ChatInp
   };
 
   return (
-    <div className="relative p-2 sm:p-4 bg-white/50 backdrop-blur-sm border-t">
+    <div className="relative p-2 sm:p-4 bg-white/80 backdrop-blur-sm border-t">
       <div className="flex gap-2 max-w-[800px] mx-auto">
         <Input
           value={inputMessage}

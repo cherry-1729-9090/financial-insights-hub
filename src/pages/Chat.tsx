@@ -79,7 +79,7 @@ const Chat = ({ userData }: any) => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden relative bg-gradient-to-br from-blue-50 to-indigo-50">
+    <div className="flex h-[100dvh] overflow-hidden relative bg-gradient-to-br from-blue-50 to-indigo-50">
       {/* Overlay for mobile when sidebar is open */}
       {!isSidebarCollapsed && (
         <div 
@@ -120,12 +120,12 @@ const Chat = ({ userData }: any) => {
       </button>
       
       {/* Main chat area */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
+      <div className="flex-1 flex flex-col h-full overflow-hidden relative">
         <ChatHeader userData={userData} />
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-4">
           <Card className="min-h-full bg-white/50 backdrop-blur-sm border-none shadow-sm">
-            <div className="p-2 sm:p-4 space-y-2 sm:space-y-4">
+            <div className="p-2 sm:p-4 space-y-2 sm:space-y-4 pb-20">
               {showSuggestions && messages.length === 0 ? (
                 <div className="space-y-4">
                   <div className="p-4 sm:p-6 rounded-lg bg-gradient-to-br from-blue-50/80 to-indigo-50/80 backdrop-blur-sm border border-blue-100">
@@ -184,11 +184,13 @@ const Chat = ({ userData }: any) => {
           </Card>
         </div>
 
-        <ChatInput
-          inputMessage={inputMessage}
-          setInputMessage={setInputMessage}
-          handleSendMessage={handleSendMessage}
-        />
+        <div className="absolute bottom-0 left-0 right-0">
+          <ChatInput
+            inputMessage={inputMessage}
+            setInputMessage={setInputMessage}
+            handleSendMessage={handleSendMessage}
+          />
+        </div>
       </div>
     </div>
   );
