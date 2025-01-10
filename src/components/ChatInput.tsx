@@ -17,13 +17,13 @@ const ChatInput = ({ inputMessage, setInputMessage, handleSendMessage }: ChatInp
   };
 
   return (
-    <div className="relative">
+    <div className="relative p-2 sm:p-4">
       <div className="flex gap-2">
         <Input
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           placeholder="Type your financial question..."
-          className="flex-1 bg-white/80 backdrop-blur-sm border-blue-100 focus-visible:ring-primary"
+          className="flex-1 bg-white/80 backdrop-blur-sm border-blue-100 focus-visible:ring-primary text-sm sm:text-base py-2 px-3 sm:py-3 sm:px-4"
           onKeyPress={(e) => {
             if (e.key === 'Enter') {
               onSendMessage();
@@ -33,7 +33,7 @@ const ChatInput = ({ inputMessage, setInputMessage, handleSendMessage }: ChatInp
         <Button 
           onClick={onSendMessage}
           disabled={!inputMessage.trim()}
-          className="bg-primary hover:bg-primary/90 text-white"
+          className="bg-primary hover:bg-primary/90 text-white h-auto py-2 px-3 sm:py-3 sm:px-4"
         >
           <Send className="h-4 w-4" />
         </Button>
