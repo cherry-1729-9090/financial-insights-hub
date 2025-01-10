@@ -79,37 +79,48 @@ const Chat = ({ userData }: any) => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden relative">
+      {/* Overlay for mobile when sidebar is open */}
+      {!isSidebarCollapsed && (
+        <div 
+          className="fixed inset-0 bg-black/20 z-20 lg:hidden"
+          onClick={() => setIsSidebarCollapsed(true)}
+        />
+      )}
+      
+      {/* Sidebar */}
       <div className={cn(
-        "transition-all duration-300 ease-in-out",
-        isSidebarCollapsed ? "w-0" : "w-80"
+        "fixed lg:relative lg:flex h-full z-30 transition-all duration-300 ease-in-out",
+        isSidebarCollapsed ? "-translate-x-full lg:translate-x-0 lg:w-80" : "translate-x-0 w-80"
       )}>
         <ChatSidebar
           history={chatHistory}
-          onSelectChat={setSelectedChat}
+          onSelectChat={(id) => {
+            setSelectedChat(id);
+            // Close sidebar on mobile after selection
+            if (window.innerWidth < 1024) {
+              setIsSidebarCollapsed(true);
+            }
+          }}
           selectedChat={selectedChat}
           onNewChat={handleNewChat}
           onDeleteChat={handleDeleteChat}
-          className={cn(
-            "transition-all duration-300 ease-in-out",
-            isSidebarCollapsed ? "-translate-x-full" : "translate-x-0"
-          )}
+          className="h-full"
         />
       </div>
       
-      <div className="relative">
-        <button
-          onClick={toggleSidebar}
-          className="absolute top-1/2 -left-3 z-50 p-2 rounded-full bg-white/80 hover:bg-white shadow-md transition-all duration-200 hover:scale-105"
-          style={{ transform: 'translateY(-50%)' }}
-        >
-          <ChevronLeft className={cn(
-            "h-4 w-4 text-primary transition-transform duration-300",
-            isSidebarCollapsed ? "rotate-180" : "rotate-0"
-          )} />
-        </button>
-      </div>
+      {/* Toggle button */}
+      <button
+        onClick={toggleSidebar}
+        className="fixed top-4 left-4 z-40 p-2 rounded-full bg-white/80 hover:bg-white shadow-md transition-all duration-200 hover:scale-105 lg:hidden"
+      >
+        <ChevronLeft className={cn(
+          "h-4 w-4 text-primary transition-transform duration-300",
+          isSidebarCollapsed ? "rotate-0" : "rotate-180"
+        )} />
+      </button>
       
+      {/* Main chat area */}
       <div className="flex-1 flex flex-col glass-effect shadow-lg overflow-hidden">
         <ChatHeader userData={userData} />
 
