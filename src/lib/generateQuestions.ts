@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { chatCompletion } from "@/functions/chatCompletion";
+
 const determinePersona = (creditProfile) => {
   const { credit_score, foir, credit_utilization } = creditProfile;
   const score = parseInt(credit_score, 10);
@@ -94,7 +95,7 @@ const personas = {
 const formatAIResponse = (response) => {
   response = response.replace(/```json\n/, '').replace(/\n```/, '').split(',');
   console.log('response', response);
-  return response
+  return response;
   try {
     const isMarkdown = response?.content.includes('```markdown');
 
@@ -117,7 +118,6 @@ const formatAIResponse = (response) => {
   }
 };
 
-
 type PersonaType = {
   situation: string;
   goal: string;
@@ -125,27 +125,36 @@ type PersonaType = {
   prompt?: string;  
 };
 
-
 export const generateQuestions = async (creditProfile: any): Promise<{ questions: string[]; persona: PersonaType }> => {
   const personaId = determinePersona(creditProfile);
-  creditProfile = {...creditProfile, loanList: creditProfile.loanList.slice(0,5)}
-  console.log('-----creditProfile', creditProfile)
+  // Create a safe copy of the credit profile with a default empty array for loanList
+  const safeProfile = {
+    ...creditProfile,
+    loanList: creditProfile?.loanList || []
+  };
+  
+  // Only slice if loanList exists and has items
+  const processedProfile = {
+    ...safeProfile,
+    loanList: safeProfile.loanList.slice(0, 5)
+  };
+
+  console.log('-----creditProfile', processedProfile);
   const persona = personas[personaId];
-  const message = `Generate 4 questions for ${persona.situation} based on the credit profile ${JSON.stringify(creditProfile)} 
+  const message = `Generate 4 questions for ${persona.situation} based on the credit profile ${JSON.stringify(processedProfile)} 
       and considering common user concerns. Please provide questions in the form of an array. 
       Please donot use any markdown or code blocks, just send the questions in a plain text format.
       And please donot use any other text or comments, just send the questions in a plain text format.
       Please donot add comments like "Here are four questions that could help a user with" or anything like that.
       Just send the questions in a plain text format only the questions. Ask some short questions and the questions 
       should like some generalized ones.
-      User's credit profile : ${JSON.stringify(creditProfile)}
+      User's credit profile : ${JSON.stringify(processedProfile)}
       Note : These questions are generated in a user's point of view to make the user know what kind of questions they 
       can ask an AI bot so that the user can ask the questions to the AI bot and continue the conversation Ask the questions in the form of a JSON array.
-      `
-  const response = await chatCompletion(message, creditProfile, persona, true);
+      `;
+  const response = await chatCompletion(message, processedProfile, persona, true);
 
   console.log('-------------------response data in generateQuestions', response);
  
-
   return { questions: formatAIResponse(response), persona };
 };
