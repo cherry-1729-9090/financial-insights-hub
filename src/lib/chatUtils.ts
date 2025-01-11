@@ -5,20 +5,20 @@ export const saveChatMessage = async (
   sessionId: string,
   content: string,
   role: string,
-  userId: string | number
+  payload: string
 ) => {
   // Convert userId to number, with fallback to 0
-  const numericUserId = typeof userId === 'string' ? parseInt(userId) || 0 : userId;
-  console.log('-------------------numericUserId', numericUserId);
-  console.log('-------------------content', content);
-  console.log('-------------------role', role);
-  console.log('-------------------sessionId', sessionId);
+  console.log('[saveChatMessage] [payload]', payload);
+  console.log('[saveChatMessage] [content]', content);
+  
+  console.log('[saveChatMessage] [role]', role);
+  console.log('[saveChatMessage] [sessionId]', sessionId);
   const { data, error } = await supabase
     .from('chat_messages')
     .insert({
       content,
       role,
-      user_id: numericUserId,
+      user_id: payload,
       session_id: sessionId
     });
 

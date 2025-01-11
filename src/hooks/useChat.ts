@@ -12,11 +12,12 @@ export type PersonaType = {
   prompt?: string;  
 };
 
-export const useChat = (persona: PersonaType, userData: any) => {
+export const useChat = (persona: PersonaType, userData: any, payload: string) => {
+  console.log('[useChat] [payload]', payload);
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const { messages, setMessages, addMessage } = useChatMessages();
-  const { chatHistory, createChatSession, invalidateHistory } = useChatHistory(userData?.user_id?.toString() || '0');
+  const { chatHistory, createChatSession, invalidateHistory } = useChatHistory(payload);
   const [aiQuestions, setAiQuestions] = useState<string[]>([]);
   const [context, setContext] = useState<string[]>([]);
 
@@ -69,8 +70,8 @@ export const useChat = (persona: PersonaType, userData: any) => {
       const effectiveUserId = userData?.id || '0';
 
       // Save user message
-      await saveChatMessage(sessionId, message, 'user', effectiveUserId);
-
+      await saveChatMessage(sessionId, message, 'user', payload);
+      console.log('[useChat] [saveChatMessage] [payload]', payload);
       // Get AI response using our utility function
       const aiResponse = await getChatResponse(message, userData, persona);
 
@@ -78,7 +79,7 @@ export const useChat = (persona: PersonaType, userData: any) => {
       addMessage({ text: aiResponse, isAi: true });
 
       // Save AI response
-      await saveChatMessage(sessionId, aiResponse, 'assistant', effectiveUserId);
+      await saveChatMessage(sessionId, aiResponse, 'assistant', payload);
 
       // Update context with AI response
       setContext((prevContext) => [...prevContext, aiResponse]);

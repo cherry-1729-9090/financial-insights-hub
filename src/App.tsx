@@ -19,14 +19,17 @@ const queryClient = new QueryClient({
 
 const App = () => {
   const [userData, setUserData] = useState<any>(null);
+  const [payload, setPayload] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await fetchUserCreditProfile();
+        const {data, payload} = await fetchUserCreditProfile();
+        console.log('[App] [fetchData] [payload]', payload);
         setUserData(data);
+        setPayload(payload);
         if (!data.credit_score) {
           toast({
             title: "Using Demo Data",
@@ -63,7 +66,7 @@ const App = () => {
         <TooltipProvider>
           <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
             <Routes>
-              <Route path="/" element={<Chat userData={userData} />} />
+              <Route path="/" element={<Chat userData={userData} payload={payload} />} />
             </Routes>
           </div>
           <Toaster />

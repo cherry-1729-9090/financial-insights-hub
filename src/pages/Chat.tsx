@@ -11,7 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const Chat = ({ userData }: any) => {
+const Chat = ({ userData, payload}: any) => {
+  console.log('[Chat] [payload]', payload);
   const [inputMessage, setInputMessage] = useState("");
   const [aiQuestions, setAiQuestions] = useState<string[]>([]);
   const [persona, setPersona] = useState<PersonaType | null>(null);
@@ -28,7 +29,7 @@ const Chat = ({ userData }: any) => {
     handleNewChat,
     setSelectedChat,
     handleDeleteChat,
-  } = useChat(persona, userData);
+  } = useChat(persona, userData, payload);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

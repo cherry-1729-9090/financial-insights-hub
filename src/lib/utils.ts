@@ -24,29 +24,8 @@ export const extractUserData = async () => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
     if (!token) return '';
-    
-    // Check if profile exists
-    const { data: existingProfile } = await supabase
-      .from('profiles')
-      .select('user_id')
-      .eq('user_id', token)
-      .single();
-    
-    // If profile doesn't exist, create it with a random UUID
-    if (!existingProfile) {
-      const { error: insertError } = await supabase
-        .from('profiles')
-        .insert({ 
-          id: uuidv4(),  
-          user_id: token 
-        });
-        
-      if (insertError) {
-        console.error("Error creating profile:", insertError);
-        return '';
-      }
-    }
-    
+    console.log('[extractUserData] token', token);
+
     return token;
   } catch (error) {
     console.error("Error extracting/processing user data:", error);
@@ -54,25 +33,56 @@ export const extractUserData = async () => {
   }
 }
 
-export const fetchUserCreditProfile = async () => {
+const createProfile = async (payload: string) => {
   try {
-    const payload = await extractUserData();
+    const { data: existingProfile, error: existingProfileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('user_id', payload)
+
+  console.log('[createProfile] existingProfile', existingProfile);
+  console.log('[createProfile] existingProfileError', existingProfileError);
+  if (existingProfileError?.code === "PGRST116" || existingProfile.length === 0) {
+    console.log('[createProfile] existingProfileError.code', existingProfileError.code);
+    const { error: insertError } = await supabase
+      .from('profiles')
+      .insert({ 
+        id: uuidv4(),  
+        user_id: payload 
+      });
+      
+    if (insertError) {
+      console.error("Error creating profile:", insertError);
+      return '';
+    }
+  }
+  } catch(error) {
+    console.error("Error creating profile:", error);
+    return '';
+  }
+}
+export const fetchUserCreditProfile = async () => {
+  let payload = '';
+  try {
+    payload = await extractUserData();
+    console.log('[fetchUserCreditProfile] payload', payload);
     if (!payload) {
       console.error("User ID not found");
-      return randomUserData;
+      return {data: randomUserData, payload: payload};
     }
     
+    await createProfile(payload);
     const { data, error } = await supabase.functions.invoke('credit-profile', {
       body: { userId: payload }
     });
     if (error) {
       console.error("Error fetching credit profile:", error);
-      return randomUserData;
+      return {data: randomUserData, payload: payload};
     }
     
-    return data.data || randomUserData;
+    return {data: data.data || randomUserData, payload: payload};
   } catch(error) {
     console.error("Error fetching user credit profile:", error);
-    return randomUserData;
+    return {data: randomUserData, payload: payload};
   }
 }
