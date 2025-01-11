@@ -16,7 +16,7 @@ export const useChat = (persona: PersonaType, userData: any) => {
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const { messages, setMessages, addMessage } = useChatMessages();
-  const { chatHistory, createChatSession, invalidateHistory } = useChatHistory(userData?.id);
+  const { chatHistory, createChatSession, invalidateHistory } = useChatHistory(userData?.user_id);
   const [aiQuestions, setAiQuestions] = useState<string[]>([]);
   const [context, setContext] = useState<string[]>([]);
   console.log('------------------chatHistory', chatHistory)

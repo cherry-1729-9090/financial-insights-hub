@@ -9,7 +9,10 @@ export const saveChatMessage = async (
 ) => {
   // Convert userId to number, with fallback to 0
   const numericUserId = typeof userId === 'string' ? parseInt(userId) || 0 : userId;
-
+  console.log('-------------------numericUserId', numericUserId);
+  console.log('-------------------content', content);
+  console.log('-------------------role', role);
+  console.log('-------------------sessionId', sessionId);
   const { data, error } = await supabase
     .from('chat_messages')
     .insert({

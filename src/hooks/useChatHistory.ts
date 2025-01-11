@@ -5,7 +5,7 @@ import { toast } from "sonner";
 export const useChatHistory = (userId: string | null) => {
   const queryClient = useQueryClient();
   const queryKey = ['chatHistory', userId];
-
+  console.log('[userId]', userId);
   const { data: chatHistory = [] } = useQuery({
     queryKey,
     queryFn: async () => {

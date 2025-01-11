@@ -2,7 +2,7 @@ export const chatCompletion = async (message, userData, persona, fromQuestionGen
   const openAIApiKey = import.meta.env.VITE_OPENAI_API_KEY;
   console.log('-------------------openAIApiKey', openAIApiKey);
   try {
-    console.log('[User message] :', message);
+    // console.log('[User message] :', message);
     const systemMessage = `You are an AI Financial Advisor. ${persona?.situation || ''} 
     Your goal is to ${persona?.goal || 'provide helpful financial advice'}. 
     Focus on these critical data points: ${persona?.criticalDataPoints?.join(', ') || 'credit score, income, and expenses'}.
