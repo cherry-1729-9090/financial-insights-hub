@@ -2,12 +2,16 @@ export const chatCompletion = async (message, userData, persona, fromQuestionGen
   const openAIApiKey = import.meta.env.VITE_OPENAI_API_KEY;
   // console.log('-------------------openAIApiKey', openAIApiKey);
   try {
-    // console.log('[User message] :', message);
+    console.log('[User message] :', userData);
     const systemMessage = `You are an AI Financial Advisor. ${persona?.situation || ''} 
     Your goal is to ${persona?.goal || 'provide helpful financial advice'}. 
     Focus on these critical data points: ${persona?.criticalDataPoints?.join(', ') || 'credit score, income, and expenses'}.
     Current user data: Credit Score: ${userData?.credit_score}, FOIR: ${userData?.foir}%, Active Loans: ${userData?.running_loan}
+    User's credit profile: ${JSON.stringify(userData)}
     `;
+
+    console.log('[chatCompletion] [systemMessage]', systemMessage);
+    console.log('[chatCompletion] [message]', message);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -16,7 +20,7 @@ export const chatCompletion = async (message, userData, persona, fromQuestionGen
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemMessage },
           { role: 'user', content: message }
