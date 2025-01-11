@@ -104,6 +104,7 @@ export const useChat = (persona: PersonaType, userData: any, payload: string) =>
     handleNewChat: () => {
       setSelectedChat(null);
       setContext([]);
+      window.location.reload();
     },
     selectedChat,
     setSelectedChat,
