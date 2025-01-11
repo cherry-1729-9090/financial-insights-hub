@@ -17,6 +17,7 @@ const Chat = ({ userData, payload}: any) => {
   const [aiQuestions, setAiQuestions] = useState<string[]>([]);
   const [persona, setPersona] = useState<PersonaType | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isAiThinking, setIsAiThinking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -25,7 +26,7 @@ const Chat = ({ userData, payload}: any) => {
     chatHistory,
     selectedChat,
     showSuggestions,
-    handleSendMessage,
+    handleSendMessage: originalHandleSendMessage,
     handleNewChat,
     setSelectedChat,
     handleDeleteChat,
@@ -69,6 +70,15 @@ const Chat = ({ userData, payload}: any) => {
     };
     loadChatHistory();
   }, [selectedChat, setMessages]);
+
+  const handleSendMessage = async (message: string) => {
+    setIsAiThinking(true);
+    try {
+      await originalHandleSendMessage(message);
+    } finally {
+      setIsAiThinking(false);
+    }
+  };
 
   const handleQuestionSelect = async (question: string) => {
     setInputMessage(""); 
@@ -178,6 +188,23 @@ const Chat = ({ userData, payload}: any) => {
                   {messages.map((msg, idx) => (
                     <ChatMessage key={idx} message={msg.text} isAi={msg.isAi} />
                   ))}
+                  {isAiThinking && (
+                    <div className="flex gap-2 p-4 rounded-lg">
+                      <div className="flex gap-4 max-w-[80%] w-auto p-4 rounded-lg bg-gradient-to-br from-blue-50/80 to-indigo-50/80 backdrop-blur-sm border border-blue-100">
+                        <div className="shrink-0 mt-0.5 p-1.5 h-fit rounded-full bg-primary text-white">
+                          <div className="h-3 w-3 animate-pulse" />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-gray-700">AI Financial Advisor</p>
+                          <div className="flex gap-1">
+                            <div className="h-2 w-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <div className="h-2 w-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <div className="h-2 w-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: '300ms' }} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div ref={messagesEndRef} />
                 </div>
               )}
