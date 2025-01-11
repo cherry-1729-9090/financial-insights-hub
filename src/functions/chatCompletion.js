@@ -1,6 +1,6 @@
 export const chatCompletion = async (message, userData, persona, fromQuestionGeneration = false) => {
   const openAIApiKey = import.meta.env.VITE_OPENAI_API_KEY;
-  console.log('-------------------openAIApiKey', openAIApiKey);
+  // console.log('-------------------openAIApiKey', openAIApiKey);
   try {
     // console.log('[User message] :', message);
     const systemMessage = `You are an AI Financial Advisor. ${persona?.situation || ''} 
