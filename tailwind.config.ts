@@ -22,39 +22,39 @@ export default {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        background: "#F3F0FA",
+        foreground: "#2E2E2E",
         primary: {
-          DEFAULT: "#1E3A8A",
+          DEFAULT: "#5C2ABB",
           foreground: "#FFFFFF",
         },
         secondary: {
-          DEFAULT: "#60A5FA",
-          foreground: "#1E3A8A",
+          DEFAULT: "#13A5B9",
+          foreground: "#2E2E2E",
         },
-        success: {
-          DEFAULT: "#10B981",
+        accent: {
+          DEFAULT: "#8B61EB",
           foreground: "#FFFFFF",
+        },
+        warning: {
+          DEFAULT: "#FEC108",
+          foreground: "#2E2E2E",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
         muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: "#F3F0FA",
+          foreground: "#2E2E2E",
         },
         popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
+          DEFAULT: "#FFFFFF",
+          foreground: "#2E2E2E",
         },
         card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
+          DEFAULT: "#FFFFFF",
+          foreground: "#2E2E2E",
         },
       },
       fontFamily: {
@@ -64,11 +64,11 @@ export default {
         DEFAULT: {
           css: {
             maxWidth: 'none',
-            color: 'inherit',
+            color: '#2E2E2E',
             a: {
-              color: '#1E3A8A',
+              color: '#5C2ABB',
               '&:hover': {
-                color: '#2563EB',
+                color: '#8B61EB',
               },
             },
             strong: {
@@ -79,16 +79,16 @@ export default {
               marginBottom: '0.25em',
             },
             h1: {
-              color: 'inherit',
+              color: '#2E2E2E',
             },
             h2: {
-              color: 'inherit',
+              color: '#2E2E2E',
             },
             h3: {
-              color: 'inherit',
+              color: '#2E2E2E',
             },
             h4: {
-              color: 'inherit',
+              color: '#2E2E2E',
             },
           },
         },
