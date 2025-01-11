@@ -16,7 +16,7 @@ export type Database = {
           id: string
           role: string
           session_id: string | null
-          user_id: number
+          user_id: string | null
         }
         Insert: {
           content: string
@@ -24,7 +24,7 @@ export type Database = {
           id?: string
           role: string
           session_id?: string | null
-          user_id: number
+          user_id?: string | null
         }
         Update: {
           content?: string
@@ -32,7 +32,7 @@ export type Database = {
           id?: string
           role?: string
           session_id?: string | null
-          user_id?: number
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -49,19 +49,16 @@ export type Database = {
           created_at: string
           id: string
           title: string | null
-          user_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           title?: string | null
-          user_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           title?: string | null
-          user_id?: string | null
         }
         Relationships: []
       }
@@ -112,16 +109,19 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
           email?: string | null
           id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
           email?: string | null
           id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
