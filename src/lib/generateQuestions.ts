@@ -139,7 +139,7 @@ export const generateQuestions = async (creditProfile: any): Promise<{ questions
     loanList: safeProfile.loanList.slice(0, 5)
   };
 
-  console.log('-----creditProfile', processedProfile);
+  // console.log('[generateQuestions] [creditProfile]', processedProfile);
   const persona = personas[personaId];
   const message = `Generate 4 questions for ${persona.situation} based on the credit profile ${JSON.stringify(processedProfile)} 
       and considering common user concerns. Please provide questions in the form of an array. 
@@ -154,7 +154,7 @@ export const generateQuestions = async (creditProfile: any): Promise<{ questions
       `;
   const response = await chatCompletion(message, processedProfile, persona, true);
 
-  console.log('-------------------response data in generateQuestions', response);
+  console.log('[generateQuestions] [response data]', response);
  
   return { questions: formatAIResponse(response), persona };
 };
