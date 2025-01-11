@@ -18,24 +18,41 @@ const randomUserData =  {
   employement_status: "Employed",
 }
 
-export const extractUserData = () => {
+export const extractUserData = async () => {
   try {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
     if (!token) return '';
-    console.log('-----------token', token);
-    // Decode the token (assuming it's base64 encoded)
-    const decodedToken = atob(token);
-    return decodedToken;
+    
+    // Check if profile exists
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', token)
+      .single();
+    
+    // If profile doesn't exist, create it
+    if (!existingProfile) {
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert([{ id: token }]);
+        
+      if (insertError) {
+        console.error("Error creating profile:", insertError);
+        return '';
+      }
+    }
+    
+    return token;
   } catch (error) {
-    console.error("Error extracting user data:", error);
+    console.error("Error extracting/processing user data:", error);
     return '';
   }
 }
 
 export const fetchUserCreditProfile = async () => {
   try {
-    const payload = extractUserData();
+    const payload = await extractUserData();
     if (!payload) {
       console.error("User ID not found");
       return randomUserData;
