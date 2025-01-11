@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { supabase } from "@/integrations/supabase/client"
+import { v4 as uuidv4 } from 'uuid';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -27,15 +28,18 @@ export const extractUserData = async () => {
     // Check if profile exists
     const { data: existingProfile } = await supabase
       .from('profiles')
-      .select('id')
-      .eq('id', token)
+      .select('user_id')
+      .eq('user_id', token)
       .single();
     
-    // If profile doesn't exist, create it
+    // If profile doesn't exist, create it with a random UUID
     if (!existingProfile) {
       const { error: insertError } = await supabase
         .from('profiles')
-        .insert([{ id: token }]);
+        .insert({ 
+          id: uuidv4(),  
+          user_id: token 
+        });
         
       if (insertError) {
         console.error("Error creating profile:", insertError);
