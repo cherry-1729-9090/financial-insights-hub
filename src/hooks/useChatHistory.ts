@@ -13,10 +13,13 @@ export const useChatHistory = (userId: string | null) => {
       if (!userId) return [];
       
       try {
+        // Convert numeric user ID to UUID format if needed
+        const formattedUserId = userId.includes('-') ? userId : '00000000-0000-0000-0000-000000000000';
+        
         const { data, error } = await supabase
           .from('chat_sessions')
           .select('*')
-          .eq('user_id', userId)
+          .eq('user_id', formattedUserId)
           .order('created_at', { ascending: false });
         
         if (error) {
@@ -41,11 +44,15 @@ export const useChatHistory = (userId: string | null) => {
   const createChatSession = async (message: string) => {
     console.log('Creating new chat session...');
     try {
+      // Convert numeric user ID to UUID format if needed
+      const formattedUserId = userId && userId.includes('-') ? 
+        userId : '00000000-0000-0000-0000-000000000000';
+
       const { data: session, error: sessionError } = await supabase
         .from('chat_sessions')
         .insert([{ 
           title: message.slice(0, 50) + (message.length > 50 ? '...' : ''),
-          user_id: userId
+          user_id: formattedUserId
         }])
         .select()
         .single();
