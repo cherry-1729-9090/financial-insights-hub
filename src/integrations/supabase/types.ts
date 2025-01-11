@@ -42,6 +42,13 @@ export type Database = {
             referencedRelation: "chat_sessions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "chat_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       chat_sessions: {
@@ -49,18 +56,29 @@ export type Database = {
           created_at: string
           id: string
           title: string | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           title?: string | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           title?: string | null
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "chat_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       credit_cards: {
         Row: {
@@ -109,19 +127,19 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           created_at?: string
           email?: string | null
-          id: string
-          user_id?: string | null
+          id?: string
+          user_id: string
         }
         Update: {
           created_at?: string
           email?: string | null
           id?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
