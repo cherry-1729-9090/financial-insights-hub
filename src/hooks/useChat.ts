@@ -13,7 +13,7 @@ export type PersonaType = {
 };
 
 export const useChat = (persona: PersonaType, userData: any, payload: string) => {
-  console.log('[useChat] [payload]', payload);
+  // console.log('[useChat] [payload]', payload);
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const { messages, setMessages, addMessage } = useChatMessages();

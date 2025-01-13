@@ -28,6 +28,7 @@ const App = () => {
       try {
         const {data, payload} = await fetchUserCreditProfile();
         console.log('[App] [fetchData] [payload]', payload);
+        console.log('[App] [fetchData] [data]', data);
         setUserData(data);
         setPayload(payload);
         if (!data.credit_score) {
