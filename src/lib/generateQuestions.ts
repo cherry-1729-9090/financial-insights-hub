@@ -1,7 +1,7 @@
-import { supabase } from "@/integrations/supabase/client";
 import { chatCompletion } from "@/functions/chatCompletion";
 
 const determinePersona = (creditProfile) => {
+  console.log('[generateQuestions] [creditProfile]', creditProfile);
   const { credit_score, foir, credit_utilization } = creditProfile;
   const score = parseInt(credit_score, 10);
   const utilization = parseInt(credit_utilization, 10);
@@ -127,6 +127,7 @@ type PersonaType = {
 
 export const generateQuestions = async (creditProfile: any): Promise<{ questions: string[]; persona: PersonaType }> => {
   const personaId = determinePersona(creditProfile);
+  console.log('[generateQuestions] [personaId]', personaId);
   // Create a safe copy of the credit profile with a default empty array for loanList
   const safeProfile = {
     ...creditProfile,

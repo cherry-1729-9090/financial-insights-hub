@@ -1,18 +1,13 @@
 export const fetchCreditProfile = async (userId) => {
   try {
-    const response = await fetch('https://app.minemi.ai/api/v1/credit-profile-insights', {
+    const response = await fetch("https://app.minemi.ai/api/v1/credit-profile-insights", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'userId': userId,
-        'Origin': window.location.origin,
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Accept, userId',
+        'User-Agent': 'Supabase Edge Function'
       },
-      mode: 'cors',
-      credentials: 'include',
       body: JSON.stringify({ userId: userId })
     });
 
@@ -21,7 +16,8 @@ export const fetchCreditProfile = async (userId) => {
     }
 
     const data = await response.json();
-    return data;
+    console.log('user data fetched', data.data);
+    return data.data;
   } catch (error) {
     console.error('Error fetching credit profile:', error);
     return {

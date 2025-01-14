@@ -2,7 +2,7 @@ import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { supabase } from "@/integrations/supabase/client"
 import { v4 as uuidv4 } from 'uuid';
-
+import { fetchCreditProfile } from "@/functions/fetchCreditProfile"
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -39,11 +39,10 @@ const createProfile = async (payload: string) => {
     .from('profiles')
     .select('*')
     .eq('user_id', payload)
-
-  console.log('[createProfile] existingProfile', existingProfile);
+  console.log('[createProfile] existingProfile', existingProfile.length);
   console.log('[createProfile] existingProfileError', existingProfileError);
-  if (existingProfileError?.code === "PGRST116" || existingProfile.length === 0) {
-    console.log('[createProfile] existingProfileError.code', existingProfileError.code);
+  if (existingProfile.length == 0 || existingProfileError !== null ) {
+    console.log('[createProfile] creating profile');
     const { error: insertError } = await supabase
       .from('profiles')
       .insert({ 
@@ -72,15 +71,14 @@ export const fetchUserCreditProfile = async () => {
     }
     
     await createProfile(payload);
-    const { data, error } = await supabase.functions.invoke('credit-profile', {
-      body: { userId: payload }
-    });
-    if (error) {
-      console.error("Error fetching credit profile:", error);
+    const data = await fetchCreditProfile(payload);
+    console.log('[fetchUserCreditProfile] [data]', data);
+    if (data.error) {
+      console.error("Error fetching credit profile:", data.error);
       return {data: randomUserData, payload: payload};
     }
     
-    return {data: data.data , payload: payload};
+    return {data: data , payload: payload};
   } catch(error) {
     console.error("Error fetching user credit profile:", error);
     return {data: {}, payload: payload};

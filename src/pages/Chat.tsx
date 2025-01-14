@@ -12,7 +12,6 @@ import { ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Chat = ({ userData, payload}: any) => {
-  console.log('[Chat] [payload]', payload);
   const [inputMessage, setInputMessage] = useState("");
   const [aiQuestions, setAiQuestions] = useState<string[]>([]);
   const [persona, setPersona] = useState<PersonaType | null>(null);
@@ -38,6 +37,7 @@ const Chat = ({ userData, payload}: any) => {
 
   useEffect(() => {
     const fetchQuestions = async () => {
+      console.log('[Chat] [userData]', userData);
       const { questions, persona } = await generateQuestions(userData);
       setAiQuestions(questions);
       setPersona(persona);

@@ -37,6 +37,7 @@ const App = () => {
             description: "No user token provided. Using demo data for demonstration.",
           });
         }
+        console.log('[App] [fetchData] [userData]', userData);
       } catch (error) {
         console.error("Error fetching user data:", error);
         toast({
