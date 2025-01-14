@@ -93,25 +93,12 @@ const personas = {
 };
 
 const formatAIResponse = (response) => {
-  response = response.replace(/```json\n/, '').replace(/\n```/, '').split(',');
-  console.log('response', response);
-  return response;
   try {
-    const isMarkdown = response?.content.includes('```markdown');
-
-    let questions = [];
-    if (isMarkdown) {
-      questions = response?.content
-        ?.split(/- \*\*Question \d+: /)
-        .filter(Boolean)
-        .map(q => q.split(/:\s|\n/)[0]?.trim());
-    } else {
-      const matches = response?.content.match(/\d+\.\s(.*?)(?=(\n|$))/g);
-      questions = matches ? matches.map(q => q.replace(/\d+\.\s|\n/g, '')) : [];
-    }
+    // Use regex to extract questions from the response string
+    const questions = response.match(/"(.*?)"/g)?.map(q => q.replace(/"/g, ''));
 
     console.log('questions', questions);
-    return questions.length > 0 ? questions.slice(0, 4) : ["No questions could be extracted from the response."];
+    return questions.length > 0 ? questions : ["No questions could be extracted from the response."];
   } catch (error) {
     console.error("Error formatting AI response:", error);
     return ["Failed to process AI response."];

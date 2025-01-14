@@ -65,7 +65,7 @@ const ChatSidebar = ({
               "w-full justify-start text-left relative group transition-all duration-200",
               selectedChat === chat.id 
                 ? "bg-blue-100/80 hover:bg-blue-200/80 text-primary shadow-sm" 
-                : "hover:bg-white/60 bg-[#F1F0FB]/50",
+                : "hover:bg-blue-100/100 bg-[#F1F0FB]/50 hover:text-black",
               "rounded-lg backdrop-blur-sm"
             )}
             onClick={() => onSelectChat(chat.id)}
@@ -83,12 +83,11 @@ const ChatSidebar = ({
               )}
             </div>
             <Button
-              variant="ghost"
               size="icon"
               className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 absolute right-2"
               onClick={(e) => handleDelete(e, chat.id)}
             >
-              <Trash2 className="h-4 w-4 text-gray-500 hover:text-red-500" />
+              <Trash2 className="h-4 w-4" />
             </Button>
           </Button>
         ))}
