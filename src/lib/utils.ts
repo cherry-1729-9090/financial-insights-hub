@@ -80,9 +80,9 @@ export const fetchUserCreditProfile = async () => {
       return {data: randomUserData, payload: payload};
     }
     
-    return {data: data.data || randomUserData, payload: payload};
+    return {data: data.data , payload: payload};
   } catch(error) {
     console.error("Error fetching user credit profile:", error);
-    return {data: randomUserData, payload: payload};
+    return {data: {}, payload: payload};
   }
 }
